@@ -1,0 +1,19 @@
+\documentclass[../thesis.tex]{subfiles}
+
+\begin{document}
+
+\section{Existing BNN Approximations}
+- MCMC Sampling; HMC 
+- Variational Inference 
+- Laplace
+- (Maybe Dropout)
+- MAP
+- MAP Ensembles -> State-of-the-art
+    -... Ensembles have had successes in representing epistemic uncertainty and are state of the art currently. They manage to represent predictive uncertainty within the i.i.d. bounds of the dataset but also under distributional shift.
+    -One generally useful fact is that an ensembles prediction on a single point must have a lower squared error than the average squared error of the individual members. (Jensen's Inequality). And lower Log Likelihood.
+    What about looking at several data points at once? Ensemble must still be better than average.
+    Related question: Is there a single lucky network that is better than the ensemble? 
+    We have some data here. Should we include it? If yes, Where? (I don't think so)
+- LLB / Neural Linear -> Simplicity, low computational effort
+
+\end{document}
