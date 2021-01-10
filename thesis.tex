@@ -1,0 +1,153 @@
+\documentclass[12pt, A4, twoside]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\usepackage[style=apa]{biblatex}
+\addbibresource{thesis.bib}
+
+\title{BNN Thesis}
+\author{Philipp A. Hummel}
+\date{\today}
+
+\begin{document}
+
+\begin{titlepage}
+\maketitle
+\end{titlepage}
+
+\chapter{Introduction}
+Why Bayes? See two pager for more thoughts.
+
+Why NN? See two pager for more thoughts.
+
+Uncertainty is important for real world decision making.
+
+Difference between uncertainty for i.i.d. test data and test data of shifted distribution. Both necessary for real world applications.
+
+Caveat: What happens if the correct model is not among the models considered? For NNs can the distribution in function space (provably) include the true function even if the parametric model chosen is not correct? What happens if the prior is miscalibrated? (Considerations of empirical success of NNs due to properties of physics, Tegmark paper?)
+
+
+\chapter{Background}
+\subsection{Existing BNN Approximations}
+- MCMC Sampling; HMC 
+- Variational Inference 
+- Laplace
+- (Maybe Dropout)
+- MAP
+- MAP Ensembles -> State-of-the-art
+    -... Ensembles have had successes in representing epistemic uncertainty and are state of the art currently. They manage to represent predictive uncertainty within the i.i.d. bounds of the dataset but also under distributional shift.
+    -One generally useful fact is that an ensembles prediction on a single point must have a lower squared error than the average squared error of the individual members. (Jensen's Inequality). And lower Log Likelihood.
+    What about looking at several data points at once? Ensemble must still be better than average.
+    Related question: Is there a single lucky network that is better than the ensemble? 
+    We have some data here. Should we include it? If yes, Where? (I don't think so)
+- LLB / Neural Linear -> Simplicity, low computational effort
+
+
+\chapter{LLB Ensemble}
+\section{}
+Straightforward combination.
+
+Weightspace visualization
+
+
+\section{Qualitative comparison to the most popular Bayesian Neural Network Approximations}
+(See Siemens slides)
+
+Bias:
+
+Computational Cost: 
+
+Convergence:  Easily Checked; MAP network not imporving, Last Layer BLR in closed form; HMC hard to diagnose; VI also easy
+
+Adaptability: Online updates for Bayesian linear regression. MAP feature extractor can be trained further ((transfer learning)). HMC adapting samples is problematic.
+
+More dimensions: see S's thesis 2.2.3.
+
+Also compare to Laplace
+
+
+\section{Toy performance}
+Can we find toy circumstances where ensembles perform badly and can LLB ensembles help in those cases?
+
+-> Toy experiment with linear outer edges (have more toy examples. Include them?)
+
+
+\chapter{How many ensemble members do we need?}
+
+For all types of ensembles a natural and very important question is: How many ensemble members do we need?
+
+- The literature seems to suggest that 5-10 are enough for good performance. But there has not been a thorough experimental study as far as we know.
+Given the supposed great complexity of BNN posteriors, shouldn't we be surprised about such a low number?
+
+- Ensemble sizes UCI and UCI Gap Experiment (also introduce ideas about IID vs OOD data i.e. Interpolation vs. Extrapolation. OOD of X but not out of distribution of y|X! Otherwise we have of course no guarantees.) Log likelihood and RMSE.
+-> Result: 5-10 is indeed the magic range, after which the returns are strongly diminishing.
+-> convergence behaviour of LLB ensemble similar to map ensemble. Constant difference between the two independent of number of members?
+
+(We also had the data for the experiment where we compare these methods with VI on all UCI datasets, but I guess this shouldnt be a separate figure since only new thing is VI. Maybe we should just include VI as a comparison point in the ensemble sizes figures)
+
+
+
+% (predictive distribution convergence?)
+% (not only avergae log likelihood but also worst case or best case log likelihood or also looking at quantiles 0-25\%, 25-75\% and 75+)
+% (predicitve dist on measurement set)
+% How different are the members predictive distributions to eacht other?\cite{fort2019}
+
+% Given the supposed great complexity of Bayesian neural network posteriors (e.g. because of weight space symmetries), it seems surprising that five or ten ensemble members are enough. But the natural question is what do we mean by enough. Apparently the performance (in terms of log likelihood and mean squared error) does not improve with more members, but is that because we have approximated the true bayesian neural network posterior sufficiently well, or at least the true posterior predictive distribution? Have we even reached the performance of the true posterior predictive distribution (let alone its true form)? In the following chapter we will compare ensembles to bayesian neural networks approximated by MCMC sampling to understand these questions in more detail.
+
+% Have we approximated the bayesian neural network's predictive distribution or performance yet? 
+% What is the convergence behaviour of samples from the (HMC) posterior? Are MAP networks / ensembles in some sense better than samples from the posterior? Since they are the modes of the dist. they might represent it better.
+
+
+
+\chapter{Comparing ensembles with HMC}
+
+Two viewpoint metrics experiments.
++ Test LL vs. Log Posterior plot
+
+It might be instructive to look at the convergence behaviour of posterior samples and map ensembles (when using more samples and members) in weight space, but it is not straightforward to do this comparison. We might use Wasserstein distance, but approximating Wasserstein distance with samples requires a ridiculously large amount of samples in this high dimensional space. But for neural networks we actually don't care so much about the weight space anyway.
+
+Checking for convergence of Markov chain Monte Carlo chains for bayesian neural networks should focus on the space of predictive distributions and not the weight space. (The weight space of a network of [1, 100, 1] units has 100! symmetries. Which can never be explored in a reasonable amount of time. So we expect to show standard potential scale reduction to diagnose non-converged chains even when the predictive distribtuion of the chains have already converged (and that's all we care about)) ->  potential scale reduction on the means and variance of the posterior predictive distribution on test points. And predictive distribution Wasserstein distance.
+Find out whether this has been used before as a convergence criterion for MCMC bayesian neural networks. If not this both are a contribution!
+
+% In our experiments we realized that single samples from the HMC posterior usually perform better than map networks. Has not really turned out to be true.
+
+soap bubble argument: If we had the actual posterior we would make predictions by drawing samples from it and averaging their predictions (like we do with the HMC samples). Due to the soap bubble argument, MAP networks are not at all typical samples from the posterior in weight space ( and therefore probably also in function space). Should we expect map networks to perform better or worse than random samples from the posterior? Map networks are located at a peak of the posterior but what is that worth? We care about probability mass not probability density and this local spike might be very small in terms of volume. Second, when reparameterizing the model the modes generally change location.
+
+% (Possibly, few hmc samples are enough to improve upon map network)
+% If so, HMC cannot only provide the gold standard in terms of full posterior estimation, but it might also be seen as a tool (on top of map training) that can give us well performing ensembles at a low cost.
+
+UCI Gap?
+
+
+\chapter{Conclusion}
+...
+
+\section{Limitations}
+- only one architecture: single hidden layer with 50 units
+
+- only homoscedastic noise (reason: to compare fairly with LLB ensembles, but map ensemble should perform better with heteroscedasticity allowed)
+
+- HMC UCI Gap
+
+- Why is VI performance so bad?
+
+\chapter{Unsorted ideas}
+\begin{itemize}
+  \item For out of distribution data (i.e. when the IID assumption is violated) there are no guarantees for the bayesian theorems ( according to S). But it does work reasonably well when using HMC (2018 | Sufficient Conditions for Idealized Models to Have No Adversarial Examples | Gal, Smith). Maybe there is some interesting math because we are using discriminative models and not generative models.
+  
+  Answer:
+  Well first, what do we mean by OOD? We mean out of the distribution of X, but still within the same distribution of y|X. Otherwise we indeed have no chance and no guarantees since E[y|X] might change (e.g. the whole function might be shifted by +5). But what happens in a discriminative / conditional model when we get new data points from a different distribution of X? Well we have used the training data, to learn something about the posterior distribution over functions. If our parametric model was very flexible, the posterior distribution of functions should still be super wide outside the range of the X seen so far, but I see no principled problem in encountering these new data points and measuring test log likelihood on them. And I still think this is quite necessary for practice. Compare “Bayesian Data Analysis” 3rd edition 2014 Gelman, Chapter 14.1.
+  \item Bayesian linear regression; when you want to have completely separate prior distributions for the weights and the noise standard deviation, you end up with a semi conjugate model. That means that the marginal posterior distributions for each variable are not tractable. However, the conditional posterior distributions are tractable. Then you can easily use a Gibbs sampler for computing the posterior by sampling. I have not seen it clearly stated, but it seems to me that the posterior predictive distribution in this case is also not analytically tractable.
+  \item Explaining Bayesian Linear Regression
+  \item We should say something like "Great care was taken to ensure that all models considered here are actually approximating the same posterior distribution". Then we can explain that all models need to model the likelihood distribution's noise variance explicitly and that we chose to model the noise variance homoscedastically. When we try to make a map model find a local maximum of the same posterior (as HMC) then using L2 regularization can only work when we fix the noise variance beforehand. So in this case it was necessary to instead add a loss that is equivalent to the log prior
+  \item What about modelling heteroscedasticity? I would expect that these models perform better (even when the noise is actually homoscedastic? Probably not, but in reality it probably rarely is actually homoscedastic.). When we only want to learn something about ensembling, using a homoscedastic model is not a problem. When we want to show that our model has superior performance (i.e. for the LLB Ensemble case) it might be most honest if we also compared to a heteroscedastic model. Or at least mention that future work should compare to a heteroscedastic model on real-world data sets, and that LLB is not easy to do in that case (but we can imagine doing a VI approach for that case, where it would likely be tractable to model weight covariances, since we are only concerned with the last layer. (So this would only be a multivariate Normal distribution. Can we show that the posterior then must also be a normal distribution? Then VI could even find the true parameters?)). 
+  \item The Laplace approximation should be part of the review of existing methods and should be part of the qualitative comparison. 
+  \item Potential scale reduction as a tool for diagnosing HMC convergence might not work very well for bayesian neural networks. (Potential scale reduction is never a sufficient criterion) It is just as sufficient for convergence as in other cases, but it is much less necessary. This is because there are so many weight space symmetries and might not be necessary (or possible) to visit them all. Maybe a better metric would be to look at the predictive distributions' distance to each other since we only care about them.
+  \item Should we include "Single memeber better than ensemble" experiments? Well we should mention somewhere that ensembles must be better than the average of the members in terms of log likelihood and RMSE. Then we can say: it is still possible that a single lucky member network is better than the ensemble. But we find this is mostly not the case. Can be an interesting sidenote, but only if it's not too much work. And it should probably be repeated on at least ~3 data sets. So probably it is too much work.
+  \item mode changes under re parameterization argument against map networks.
+  \item LLB network/ensemble concern that it becomes overconfident when too much data is available. Toy Experiment apparently shows that this is not the case.
+  \item I should mention that I put a lot of effort in using tensorflow probability's multi chain framework for the BNN with HMC so that multiple chains are really quick to compute. And for small networks indeed running e.g. 128 chains in parallelIs only a few times slower then running only one chain.  For large networks however not so much is gained. \cite{lao2020tfp}
+\end{itemize}
+\printbibliography
+
+\end{document}

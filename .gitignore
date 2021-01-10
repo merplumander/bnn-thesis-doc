@@ -1,0 +1,7 @@
+.DS_Store
+
+# Latex specific
+_build
+*synctex.gz
+
+*.pdf
