@@ -3,8 +3,15 @@
 \begin{document}
 
 \section{Existing BNN Approximations}
-- MCMC Sampling; HMC 
-- Variational Inference 
+Since posterior distributions for Bayesian neural networks are generally intractable, we need to resort to approximative techniques. A large number of these methods have been developed in the last decades and so we will only review the most important ones here.
+
+\subsection{Markov Chain Monte Carlo Sampling}
+For many use cases having a large number of samples from the posterior distribution is just as good as knowing the distribution itself. With samples we can, for example, compute moments and quantiles of the distribution and, in a regression setting, we can use the samples for prediction. Markov Chain Monte Carlo (MCMC) methods are able to provide (dependent) samples from a posterior even if only the unnormalized posterior density $p(y|\theta)p(\theta)$ is known. Luckily, this unnormalized density is usually readily available. It is simply the product of the likelihood of the parameter values $\theta$ and their prior. So we need not consider the normalization constant $\int_{\theta} p(y|\theta)p(\theta)$ that is generally the intractable part of the posterior. To obtain samples these methods use a random walk in parameter space. From a given sample $\theta_t$ a candidate $\theta_{c}$ for the next sample is suggested from a proposal distribution e.g.\ an isotropic normal distribution $N(\theta_t, I)$ centered at $\theta_t$. This candidate is then accepted or rejected probabilistically based on the unnormalized density at both locations. If it is accepted, $\theta_{c}$ becomes the next sample $\theta_{t+1}$. Else the previous sample is used as a sample again.
+\subsubsection{Hamiltonian Monte Carlo}
+In high dimensional distributions with possibly complicated shapes like neural network posteriors, a fixed proposal distribution often leads to very inefficient sampling. Either the proposal distribution is too wide and most proposed samples are rejected since they fall into regions of low density or the proposal distribution is too narrow and the chain can only explore the distribution in tiny steps which necessitates sampling for longer to ensure that all parts of the distribution have been visited. In these cases, using Hamiltonian Monte Carlo (HMC) is sensible \parencite{duane1987hybrid, neal1995bayesian}. HMC replaces the fixed proposal distribution by gradient-based traversing of the distribution. It uses a momentum term and the gradient of the negative log posterior to take a number of so called leapfrog steps in weight space to arrive at a new proposed sample. This way, the proposal procedure adapts locally to the shape of the distribution and can generate higher acceptance rates. With HMC we can approximate BNN posteriors closely, but this method is resource intensive even for small networks and datasets and becomes prohibitively expensive in larger settings.
+
+\subsection{Variational Inference}
+
 - Laplace
 - (Maybe Dropout)
 - MAP
