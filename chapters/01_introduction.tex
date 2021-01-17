@@ -2,14 +2,14 @@
 
 \begin{document}
 
-Why Bayes? See two pager for more thoughts.
+Introducing the Bayesian view of probability as the rational state of mind of an intelligent observer. Making a bridge to Bayesian machine learning as the forecast that lawfully incorporates all forms of uncertainty. (Somewhere mentioning that Bayesian updates are only possible in closed form for very simple models and that for other models we have to resort to approximations.)
 
-Why NN? See two pager for more thoughts.
-
-Uncertainty is important for real world decision making.
-
-Difference between uncertainty for i.i.d. test data and test data of shifted distribution. Both necessary for real world applications.
+Introduce neural networks as flexible function approximators. Fixed basis functions are not good enough, since hand engineering them empirically does not work well enough for many real problems. NNs can adapt their basis functions to be a good feature extractors for the problem at hand. Last layer acts (roughly) as linear predictor. Standard frequentist (maximum likelihood) training of NNs disregards the epistemic uncertainty we have about the parameters of the NN. This can lead to drastic overconfidence. Especially bad since we often have more parameters than training data points. Therefore we do not expect the posterior to be strongly peaked around the MAP estimate (and the delta spike MAP approximation to the Bayesian estimate is not reasonable).
 
 Caveat: What happens if the correct model is not among the models considered? For NNs can the distribution in function space (provably) include the true function even if the parametric model chosen is not correct? What happens if the prior is miscalibrated? (Considerations of empirical success of NNs due to properties of physics, Tegmark paper?)
+
+Calibrated uncertainty estimates are important for decision making (maybe example ambulance on the way to the hospital). Bayesian NNs hold the promise to give these uncertainty estimates, as opposed to the currently standard ML NNs.
+
+Difference between uncertainty for i.i.d. test data and test data of shifted distribution. Both necessary for real world applications.
 
 \end{document}
