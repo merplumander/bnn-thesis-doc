@@ -1,11 +1,29 @@
 \documentclass[12pt, A4, twoside]{report}
 \usepackage[utf8]{inputenc}
-\usepackage[english]{babel}
+%\usepackage[english]{babel}
+
+% Needed for equation environments etc. https://www.overleaf.com/learn/latex/Aligning%20equations%20with%20amsmath
+\usepackage{amsmath}
+% Boldface printing for all characters in math mode with \vect{}
+\usepackage{bm}
+\newcommand{\vect}[1]{\boldsymbol{\mathbf{#1}}}
 
 \usepackage[style=apa]{biblatex}
 \addbibresource{thesis.bib}
 
+
+% ####################  recommended from how_to_tikzplot
+\usepackage{tikz, pgfplots}
+\pgfplotsset{compat=newest}
+
+\newlength{\figheight}
+\newlength{\figwidth}
+% ####################
+
 \usepackage{subfiles} % Best loaded last in the preamble according to https://www.overleaf.com/learn/latex/Multi-file_LaTeX_projects#The_subfiles_package
+
+\DeclareMathOperator{\kl}{KL}
+
 
 \title{BNN Thesis}
 \author{Philipp A. Hummel}
