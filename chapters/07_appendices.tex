@@ -1,0 +1,42 @@
+\documentclass[../thesis.tex]{subfiles}
+
+\begin{document}
+
+\chapter{Additional UCI Metrics}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{uci_two-hidden-layers_RMSEs} 
+    \caption{Benchmark of different BNN approximations on the nine UCI datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (blue circles), and LLB networks (orange triangles) and LLB ensembles (orange circles) of different sizes in terms of the average root mean squared error across the 20 (respectively 5 for protein) splits. Shown are mean and standard error. The plot shows the performance of ensembles of size 5, 20, and 50 in increasing order.}
+    \label{fig:uci-benchmark-rsme}
+\end{figure}
+
+
+\chapter{Additional UCI Gap Metrics}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{uci-gap_two-hidden-layers_RMSEs} 
+    \caption{Benchmark of different BNN approximations on the nine UCI-Gap datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (blue circles), and LLB networks (orange triangles) and LLB ensembles (orange circles) of different sizes in terms of the average test negative log likelihood across the 20 (respectively 5 for protein) splits. Shown are mean and standard error. The plot shows the performance of ensembles of size 5, 20, and 50 in increasing order.}
+    \label{fig:uci-gap-benchmark-rmse}
+\end{figure}
+
+
+\chapter{Additional HMC UCI Metrics}
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_two-hidden-layers_HMC-Map-Ensemble-RMSE} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{boston_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{concrete_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+    \end{subfigure}
+    \caption{RMSE}
+    \label{fig:hmc_comparisons_two-rmse}
+\end{figure}
+
+\end{document}

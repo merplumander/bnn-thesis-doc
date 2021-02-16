@@ -1,0 +1,95 @@
+\documentclass[../thesis.tex]{subfiles}
+
+\begin{document}
+
+Combining ensembles and LLB $\rightarrow$ LLB ensembles
+\bigskip
+
+Toy network weight space visualization: Figure \ref{fig:weight-space-approximations} (!! Maybe also show VI approximation? !!)
+\bigskip
+
+LLB ensembles can capture different modes of the posterior (like MAP ensembles) and capture more epistemic uncertainty for the weights of the last layer. However, we have no guarantees to capture the modes in the correct ratio to each other (mixture coefficients might be off). 
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}{\textwidth}
+    \includegraphics[width=0.9\linewidth]{map_vs_hmc} 
+    % \centering
+    % \setlength{\figwidth}{.9\textwidth}
+    % \setlength{\figheight}{.3\textheight}
+    % \input{figures/map_vs_hmc.tex}
+    % \caption{}
+    \label{fig:subim1}
+    \end{subfigure}
+
+    \begin{subfigure}{\textwidth}
+    \includegraphics[width=0.9\linewidth]{llb_vs_hmc}
+    % \caption{Caption 2}
+    \label{fig:subim2}
+    \end{subfigure}
+
+    \begin{subfigure}{\textwidth}
+    \includegraphics[width=0.9\linewidth]{ensemble_vs_hmc}
+    % \caption{Caption 3}
+    \label{fig:subim3}
+    \end{subfigure}
+
+\end{figure}
+
+
+\begin{figure}[h!]\ContinuedFloat
+    \begin{subfigure}{\textwidth}
+    \includegraphics[width=0.9\linewidth]{llb_ensemble_vs_hmc}
+    % \caption{Caption 4}
+    \label{fig:subim4}
+    \end{subfigure}
+
+    \caption{Visualization of the ``ground truth'' marginal posterior distribution of two weights of a toy neural network as determined by HMC (in blue) and several approximation strategies (in green). a) MAP network: Approximation with a Dirac delta. b) LLB network: Approximation with a MAP Dirac delta for the weight from input to hidden layer and a t-distribution for the weight from hidden to output layer. c) MAP ensemble: Approximation with a mixture of Diracs. d) LLB ensemble: Approximation with a mixture of Diracs for the weight from input to hidden layer and a mixture of t-distributions for the weight from hidden to output layer.}
+    \label{fig:weight-space-approximations}
+\end{figure}
+
+
+\section{Qualitative Comparison to other Bayesian Neural Network Approximations}
+\begin{itemize}
+    \item Bias
+    \item Computational Cost
+    \item Convergence
+    \item Adaptability
+\end{itemize}
+$\rightarrow$ LLB ensembles are a new method to approximate BNNs and make a new trade-off. Whether this trade-off is favourable compared to other methods depends on the context, but it seems promising in scenarios where standard ensembles might have otherwise been the method of choice. In these cases, LLB ensembles can potentially approximate the posterior more faithfully and have better predictive uncertainty than MAP ensembles at negligible additional cost. In the following chapters we will see that empirical benchmarks are in line with these theoretical considerations and that LLB ensembles can at least sometimes improve upon standard ensembles.
+
+
+\section{Toy Experiments}
+!!Not sure whether to include these results or not.!!
+
+Can we find toy circumstances where ensembles perform badly and can LLB ensembles help in those cases?
+
+$\rightarrow$ Yes, ensembles underestimate the predictive uncertainty when the functional diversity in the ensemble is low \parencite{yao2019quality}. In our 1-D toy experiments this happens for example when the outer edges of the training data are approximately linear. In these cases, relu networks (perhaps unsurprisingly) tend to simply linearly extrapolate and so all ensemble members have approximately the same predictive distribution. Using LLB ensembles can remedy the problem in those cases. See figure \ref{fig:linear-outer-edge} !! (have three more toy examples. Include them?) !!
+\begin{figure}
+    \centering
+    \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=0.6\linewidth]{ensemble_linear-outer-edge} 
+
+    % \caption{}
+    % \label{fig:subim1}
+    \end{subfigure}
+
+    \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=0.6\linewidth]{llb-ensemble_linear-outer-edge}
+    % \caption{Caption 2}
+    % \label{fig:subim2}
+    \end{subfigure}
+
+    \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=0.6\linewidth]{hmc_linear-outer-edge}
+    % \caption{Caption 3}
+    % \label{fig:subim3}
+    \end{subfigure}
+
+    \caption{Visualization of the predictive distributions of an ensemble, an LLB ensemble, and HMC for toy training data. a) The ensemble is highly overconfident outside the region where the training data falls. b) In contrast the LLB ensemble has a much larger predictive uncertainty in this region. c) The predictive ``ground truth'' uncertainty of HMC is quite broad outside the range of the training data.}
+    \label{fig:linear-outer-edge}
+\end{figure}
+\end{document}

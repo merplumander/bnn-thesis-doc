@@ -1,0 +1,109 @@
+\documentclass[../thesis.tex]{subfiles}
+
+\begin{document}
+
+Should we be surprised to reach a performance plateau in the number of members of the ensemble so quickly? The shape of BNN posteriors is not well understood, so it is not clear to us what to expect a priori.
+% If the posterior has many (functionally) different local optima, perhaps we should expect quite large ensembles to have an advantage over smaller ones, if they indeed all find different optimaIt is unclear how many (functionally different) local optima there are in the posterior and how useful it is to visit several of them. Hand-wavily it might seem like we should expect many local optima in parameter space (i.e.\ good explanations for the data) (but how many of them are functionally different and not just weight symmetries?) since we have an exponentially large parameter space. But on the other hand, in high dimensions it is hard to have a local optimum since you need to have a wall in all exponentially many directions. Therefore, neural network posteriors might have essentially only one optimum/mode and differently initialized networks should end up in the same optimum and being functionally equivalent (Yann LeCun argument). It is not directly which of the two hand wavy viewpoints is more in line with reality, but the latter argument (at least in its strongest form) must be false, otherwise ensembling could not increase performance. But it is generally still unclear why we reach a plateu in performance quickly.
+\bigskip
+
+Several hypotheses to investigate come up in connection with this question:
+\begin{itemize}
+    \item When the ensemble is already large, a new member cannot change the prediction much. So perhaps that's why we see these quickly diminishing returns? But a doubling of the members should still be able to introduce similarly significant changes and we don't see that e.g.\ going from 25 to 50 (and we will see that going to 1000 members also gives essentially no changes).
+    \item What is the relationship to the true posterior predictive? Have we approximated it sufficiently well? Or have we perhaps reached its performance or a better performance without having approximated the predictive distribution well (like \parencite{yao2019quality})?
+    \item Relatedly, we should make sure to properly differentiate between the predictive distribution and the performance metrics. Perhaps the predictive distribution is still changing in meaningful ways but these changes are simply not captured by test log likelihood (and RMSE).
+    \item What is the convergence behaviour when we ensemble samples from the true posterior (as we naturally would to make predictions given the posterior)? Will they show a similar pattern? Possibly MAP (and LLB) networks are ``better'' in some sense (i.e.\ have better performance) than individual samples from the posterior? Perhaps MAP networks are a better representation of the posterior than single samples from it (perhaps they compress the information better) since they represent a local maximum of the posterior? Perhaps, however, samples from the posterior show a greater variety in their predictive distributions and therefore ensembling them is more beneficial and for longer?
+    \item Perhaps ensembling shows the quickly diminishing returns because two or more of the networks in the ensemble have the same predictive distribution (weight symmetry) and therefore do not add meaningful new information? !! (I have very preliminary data for this that suggests that the members all have a different predictive distribution. I think this is a very interesting result, but I currently doubt that I'll have time to bring these experiments into a usable form for the thesis and write about the results.)
+\end{itemize}
+To address these questions we compare ensembles to ``ground truth'' posterior predictive distributions as determined by HMC on selected, UCI data splits.
+
+\bigskip
+
+\section{Technical Interlude}
+- Introducing Wasserstein distance and how we want to use it to compare posterior predictive distributions. Also how we approximate it with sampling (and potentially the experiments that show how low the introduce bias is)
+
+- MCMC convergence criteria:
+Potential Scale Reduction, Effective Sample Size
+
+They don't work well for neural networks, because it is not necessary that all MCMC chains have their samples in the same region in parameter space and visiting the whole posterior is infeasible for even small neural networks due to weight symmetries (a network with 50 hidden units has $50!\approx 10^64$ weight symmetries just from reordering the neurons. It is therefore infeasible even to just visit each symmetric region once.). But we can apply potential scale reduction and effective sample size to the parameters of the predictive distributions of the samples, which is what we care about in practice. Since we predict distributions over functions this seems hard, but we can instead use the predictive distributions on some specific points only. In practice we use the train and test points, but one could also use random points in input space. !! (I do think that part is actually a pretty strong contribution since I haven't seen it somewhere else. In other papers they usually just say something like we ran HMC for x samples and check for mixing and convergence with trace plots (in weight space). And I believe that HMC chains of (not tiny) neural networks should usually fall short of proper mixing and convergence in weight space when checked correctly. So I should probably give this part a highlighted place and not to call this section technical interlude) !! 
+
+We could also use the Wasserstein distance between the predictive distributions as a convergence criterion.
+
+\section{Experiments on UCI datsets}
+-General HMC procedure:  We use tensorflow probability's MCMC implementation \parencite{lao2020tfp} to obtain samples from the posterior of the BNN with HMC. We took great care to write the code\footnote{Code available at: https://github.com/merplumander/bnn-thesis !! I should mention that somewhere else !!} in a way to allow to use the speed-ups that tensorflow probability provides, especially to allow for Single Instruction Multiple Data (SIMD) parallelism. Indeed, for small networks (a single input dimension, two  hidden layers with 20 and 10 neurons and a single output dimension) running 128 chains takes about twice as long as running a single chain (on a 2016 Macbook Pro with a 2,7 GHz Quad-Core Intel Core i7 processor). These tremendous multi-chain speed-ups are unfortunately mostly lost for the UCI experiments (likely due to the larger matrix multiplications). For these experiments we run four (respectively two for the two-hidden-layer yacht experiment) chains randomly initialized from the overdispersed prior. We use tensorflow probability's dual averaging stepsize adaption \parencite{hoffman2014no} to find a good step size and discard the first 50000 samples as burn-in. Then we obtain a total of 500000 samples. Next we check for convergence with potential scale reduction \parencite{gelman1992inference} applied to the predicitve distribution at the training data points as described above.
+\bigskip 
+
+-Additional tricks used to get two layer NN to converge. !! Mention energy HMC bad acceptance rates !!
+\bigskip
+
+-Figure description: For each experiment we independently train 1000 MAP and LLB networks and split them into 10 ensembles of size 100. From these 10 ensembles we then compute mean and standard error estimates for ensemble sizes up to 1000. We also use 10 HMC ensembles of size 100. For the larger ensemble sizes---1000 for ensembles and 1000 and 10000 for HMC---we only use one ensemble and therefore do not have standard error estimates.
+\bigskip
+
+!! RMSE figures in the appendix?!!
+\bigskip
+
+!! To Do: Draw into the plots also the predictive distribution Wasserstein distance between chains. So far it is only the predictive distribution Wasserstein distance of all chains together to itself (due to sampling error) !!
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_two-hidden-layers_HMC-Map-Ensemble-LL} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_two-hidden-layers_HMC-Map-Ensemble-predictive-WD} 
+    \end{subfigure}
+    \caption{Two hidden layers.}
+    \label{fig:yacht_hmc_comparison_two-hidden-layers_nll}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_one-hidden-layer_HMC-Map-Ensemble-LL} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_one-hidden-layer_HMC-Map-Ensemble-predictive-WD} 
+    \end{subfigure}
+    \caption{One hidden layer}
+    \label{fig:yacht_hmc_comparison_one-hidden-layer_nll}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{boston_01_one-hidden-layer_HMC-Map-Ensemble-LL} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{boston_01_one-hidden-layer_HMC-Map-Ensemble-predictive-WD} 
+    \end{subfigure}
+    \caption{One hidden layer}
+    \label{fig:Boston_hmc_comparison_nll}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{concrete_01_one-hidden-layer_HMC-Map-Ensemble-LL} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{concrete_01_one-hidden-layer_HMC-Map-Ensemble-predictive-WD} 
+    \end{subfigure}
+    \caption{One hidden layer}
+    \label{fig:concrete_hmc_comparison_nll}
+\end{figure}
+
+Results:
+\begin{itemize}
+    \item Neither MAP nor LLB ensembles of any size considered reach HMC's performance in terms of NLL or RMSE.
+    \item As we knew already larger ensembles relatively monotonically give a better performance (does not hold for every split, but does hold on these splits and as we saw earlier in aggregate on every dataset)
+    \item Even going to 100 or 1000 members does not noticeably improve performance (for MAP and LLB).
+    \item HMC ensembles generally start out with worse LL performance but overtake the other ensembles as the number of members increases. Interestingly, for RMSE HMC ensembles (even single samples) start out with a better performance than the other ensemble types.
+    \item HMC ensembles initially show a qualitatively similar behaviour when adding more members in terms of performance. Performance increases initially quickly and then start to show strongly diminishing returns somewhere between 5 and 10 members. In contrast to the other ensembling types however, their performance keeps slowly increasing even up to sizes of 10000 members (for LL, for RMSE they reach full performance more quickly).
+    \item One and two hidden layer performance on yacht seems qualitatively similar.
+    \item In all of the experiments, MAP and LLB ensembles of all sizes have not fully approximated the (HMC) posterior predictive in terms of Wasserstein distance.
+    \item For yacht even single samples from the (HMC) posterior are closer to the full posterior predictive than large MAP or LLB ensembles. For boston and concrete, single HMC networks have a higher Wasserstein distance to the full posterior predictive than large MAP or LLB ensembles, but with a few more members HMC ensembles overtake the other ensembling types.
+    \item Ensembling does help to approximate the posterior predictive more closely and large ensembles generally come closer.
+    \item HMC sample ensembles converge more evenly in terms of Wasserstein distance to the full HMC posterior predictive. The returns of large ensembles do not diminish as quickly as for LL.
+    \item For both yacht experiments, LLB ensembles are closer to the true posterior predictive than MAP ensembles, which is perhaps not so surprising because they also have better LL and RMSE performance. For boston, MAP ensembles have slightly lower Wasserstein distance, but also perform better in terms of LL and RMSE. Interestingly, LLB ensembles' performance on concrete is worse than MAP ensembles' for both LL and RMSE, but they are still closer to the posterior predictive in terms of Wasserstein distance.
+    \item HMC's test log likelihood is sometimes not fully converged for 1000 or 10000 members, even when the Wasserstein distance to the full posterior predictive indicates convergence already. Apparently, LL is quite sensitive to small differences in the predictive distribution.
+\end{itemize}
+
+\end{document}

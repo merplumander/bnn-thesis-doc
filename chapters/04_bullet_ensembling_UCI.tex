@@ -1,0 +1,157 @@
+\documentclass[../thesis.tex]{subfiles}
+
+\begin{document}
+
+\section{Datasets}
+We compare the performance of ensembles of different sizes on nine standardly used UCI datasets. For each dataset we obtained the train-test splits used in \textcite{gal2016dropout} and \textcite{hernandez2015probabilistic}\footnote{Train-test splits available here: https://github.com/yaringal/DropoutUncertaintyExps}. 
+\bigskip
+
+\section{Model Architecture}
+!! Perhaps I should describe the probabilistic model already earlier !!
+
+\section{UCI Benchmarks}
+Comparison between VI, and MAP and LLB networks and ensembles of different sizes on UCI. Which ensemble sizes to use? \\
+- Initial evidence in the literature seems to suggest that 5 to 10 are enough for good performance. In the appendix of \textcite{ovadia2019can} ensembles of up to size 50 are compared on image classification tasks (CIFAR-10 and ImageNet) including also scenarios with dataset shift (Gaussian blur) and the authors conclude that ``increasing the number of models in the ensemble improves performance with diminishing returns beyond size 5''.
+\bigskip
+
+Questions:
+\begin{itemize}
+    \item How do single networks (both MAP and LLB) perform compared to ensembles?
+    \item How are the different ensemble sizes performing? Diminishing returns?
+    \item Do LLB ensembles perform better or worse than MAP ensembles?
+    \item How do the above mentioned methods compare to VI?
+\end{itemize}
+
+See figure \ref{fig:uci-benchmark}
+
+!! TO DO: Either present the NLLs and RMSEs here in normalized space (and include the transformation-constants) or present the NLLs later in the HMC experiments in original space. Leaning towards using normalized space everywhere because e.g.\ Wasserstein distance and RMSE is more comparable in normalized space. !!
+
+!! Results for one hidden layer NLL and RMSE in appendix and results for two hidden layer RMSE also in appendix? !!
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{uci_two-hidden-layers_NLLs} 
+    \caption{Benchmark of different BNN approximations on the nine UCI datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (blue circles), and LLB networks (orange triangles) and LLB ensembles (orange circles) of different sizes in terms of the average test negative log likelihood across the 20 (respectively 5 for protein) splits. Shown are mean and standard error. The plot shows the performance of ensembles of size 5, 20, and 50 in increasing order.}
+    \label{fig:uci-benchmark}
+\end{figure}
+
+$\rightarrow$
+\begin{itemize}
+    \item Single networks (LLB or MAP) perform worse than ensembles of any size considered in terms of log likelihood and RMSE on all datasets and for both network architectures considered on average. !! Doublecheck again if that is indeed true!! This however does not hold for each individual split.
+    \item LLB ensembles can sometimes improve upon MAP ensembles, but also perform slightly worse for some datasets.
+    \item Larger ensemble sizes are better but returns are indeed quickly diminishing.
+    \item Returns of using larger ensembles seem to follow a similar pattern wether we use MAP or LLB networks.
+    \item Relatedly, the difference between MAP and LLB ensembles seems to be relatively stable across different ensemble sizes within each dataset.
+    \item VI performance is pretty bad for some datasets. Likely due to a) using standard VI instead of Reparameterization or Flipout trick. b) VI's strong dependence on initializations of variational posterior and likelihood's noise scale, that we didn't tune.
+\end{itemize}
+
+
+
+\section{Returns of Using Larger Ensembles}
+When dealing with ensembles one of the most important questions to ask is: How many ensemble members should we train? 
+
+
+We saw already above that returns are quickly diminishing and that 20 members are not that much better than 5 and 50 members hardly improve upon 20. Also \textcite{ovadia2019can} concluded that ``increasing the number of models in the ensemble improves performance with diminishing returns beyond size 5''.
+But can we be a bit more quantitative about the relationship between performance and number of ensemble members?
+\bigskip
+
+For each split of each UCI dataset we benchmarked different ensemble sizes up to 50 members. We then scaled the per-dataset-averaged performance curves to the range $[0, 1]$ where we fix the single network's performance at 0 and the full 50-member ensemble's performance at 1 and report mean and standard error of these curves for both MAP and LLB ensembles. The standard error here represents the variation between the averaged performance curves and excludes within-dataset variation between splits. $\rightarrow$ Figure \ref{fig:uci-ensemble-sizes}
+\bigskip
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{uci_ensemble-size-convergence_two-hidden-layers_2_NLLs} 
+    \caption{Average (and standard error) fraction of performance reached of a full ensemble of 50 members. The curves are calculated by first calculating the average performance curves per dataset across splits, scaling these curves individually to the range $[0, 1]$ (single network performance at 0 and full 50-member ensemble performance at 1). MAP ensemble curve (blue) shifted to the left and upwards to be able to visualize both curves since they are almost identical.}
+    \label{fig:uci-ensemble-sizes}
+\end{figure}
+
+!! Alternatively I was thinking about using two figures (one for MAP and one for LLB) like figure \ref{fig:uci-ensemble-sizes-alternative}. Actually, I tend towards this visualization now. !!
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{\textwidth}
+    \includegraphics[width=0.9\textwidth]{uci_ensemble-size-convergence_two-hidden-layers_Ensemble_NLLs} 
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+    \includegraphics[width=0.9\textwidth]{uci_ensemble-size-convergence_two-hidden-layers_LLB-Ensemble_NLLs} 
+    \end{subfigure}
+    \caption{Similar to figure \ref{fig:uci-ensemble-sizes}. Averaged performance curves for each dataset scaled to $[0, 1]$ in light colors. Average of these curves in black. Highlighted points are 2, 5, 10, 20, 50 ensemble members. }
+    \label{fig:uci-ensemble-sizes-alternative}
+    
+\end{figure}
+
+\bigskip
+
+$\rightarrow$ Results:
+\begin{itemize}
+    \item Returns of using more members are following the same pattern for MAP and LLB ensembles.
+    % \item Returns of ensembling show greater variation for MAP networks.
+    \item Returns are quickly diminishing and 2, 5, 10, and 20 networks reach 0.52, 0.82, 0.91, and 0.96 of the performance of the 50-member ensemble for MAP entworks and 0.51, 0.81, 0.9, and 0.96 for LLB networks. 
+    \item We will later see that 1000-member ensembles do not improve upon the performance of 50-member ensembles, so 50-member ensembles approximately represent all gains we can get from ensembling.
+    \item Two networks give 50\% of the possible gains of ensembling! (again this does not hold on every single split but in aggregate)
+\end{itemize}
+
+
+\section{UCI Gap Benchmarks}
+Additionally, we investigate the behaviour on the recently introduced UCI-Gap datasets to test OOD performance \parencite{foong2019between}\footnote{Many thanks to Andrew Foong for providing these data splits.}. 
+\bigskip
+
+Questions:
+\begin{itemize}
+    \item Does ensembling help in OOD cases? And if so, how?
+    \item Does LLB help or hurt?
+    \item How do the ensembles compare to VI?
+\end{itemize}
+\bigskip
+
+$\rightarrow$ Figure \ref{fig:uci-gap-benchmark}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{uci-gap_two-hidden-layers_NLLs} 
+    \caption{Benchmark of different BNN approximations on the nine UCI-Gap datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (blue circles), and LLB networks (orange triangles) and LLB ensembles (orange circles) of different sizes in terms of the average test negative log likelihood across the 20 (respectively 5 for protein) splits. Shown are mean and standard error. The plot shows the performance of ensembles of size 5, 20, and 50 in increasing order.}
+    \label{fig:uci-gap-benchmark}
+\end{figure}
+
+\bigskip
+
+\begin{itemize}
+    \item Again, ensembles performed better than single networks in all experiments. 
+    \item Diminishing returns, but perhaps less quickly.
+    \item Largest ensemble slightly worse for yacht. We assume this is due to noise.
+    \item LLB helped for yacht, but otherwise hurt or did not change performance. (We also performed these experiments with a non-informative prior (simply since we had not decided on the prior to be used throughout the experiments at that point), and in that setting LLB often helped quite a bit. So perhaps our choice of prior is not ideal.)
+    \item Note the y-scale for energy and naval. The performance of all single network and ensembling methods is catastrophic, but VI seems to do well.
+    \item VI seems to do comparatively more favourably than in the standard UCI experiments.
+\end{itemize}
+
+\bigskip
+We also look at the ensemble convergence behaviour when using more and more members in the OOD case.
+\bigskip
+
+$\rightarrow$ Figure \ref{fig:uci-gap-ensemble-sizes}
+\bigskip
+
+\begin{itemize}
+    \item Returns of using larger ensembles seem to follow a similar pattern as in the IID experiments.
+    \item Convergence is slightly slower.
+    \item Again, the returns of using larger ensembles follow almost identical patterns four MAP and LLB ensembles.
+\end{itemize}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{uci-gap_ensemble-size-convergence_two-hidden-layers_2_NLLs} 
+    \caption{Average (and standard error) fraction of performance reached of a full ensemble of 50 members. The curves are calculated by first calculating the average performance curves per dataset across splits, scaling these curves individually to the range $[0, 1]$ (single network performance at 0 and full 50-member ensemble performance at 1). MAP ensemble curve (blue) shifted to the left and upwards to better visualize both curves.}
+    \label{fig:uci-gap-ensemble-sizes}
+\end{figure}
+
+!! Again alternatively I was thinking about using two figures (one for MAP and one for LLB) like figure \ref{fig:uci-gap-ensemble-sizes-alternative} !!
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{uci-gap_ensemble-size-convergence_two-hidden-layers_Ensemble_NLLs} 
+    \caption{Again the alternative to figure \ref{fig:uci-gap-ensemble-sizes}. Averaged performance curves for each dataset scaled to $[0, 1]$ in light colors. Average of these curves in black. Highlighted points are 2, 5, 10, 20, 50 ensemble members.}
+    \label{fig:uci-gap-ensemble-sizes-alternative}
+\end{figure}
+
+
+\end{document}
