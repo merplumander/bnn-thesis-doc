@@ -2,14 +2,142 @@
 
 \begin{document}
 
-Introducing the Bayesian view of probability as the rational state of mind of an intelligent observer. Making a bridge to Bayesian machine learning as the forecast that lawfully incorporates all forms of uncertainty. (Somewhere mentioning that Bayesian updates are only possible in closed form for very simple models and that for other models we have to resort to approximations.)
+% Introducing the Bayesian view of probability as the rational state of mind of an intelligent observer. Making a bridge to Bayesian machine learning as the forecast that lawfully incorporates all forms of uncertainty. (Somewhere mentioning that Bayesian updates are only possible in closed form for simple models and that for other models we have to resort to approximations.)
+% 
+% Introduce neural networks as flexible function approximators. Fixed basis functions are not good enough, since hand engineering them empirically does not work well enough for many real problems. NNs can adapt their basis functions to be good feature extractors for the problem at hand. Last layer acts (roughly) as linear predictor. Standard frequentist (maximum likelihood) training of NNs disregards the epistemic uncertainty we have about the parameters of the NN. This can lead to drastic overconfidence. Especially bad since we often have more parameters than training data points. Therefore we do not expect the posterior to be strongly peaked around the MAP estimate (and the delta spike MAP approximation to the Bayesian estimate is not reasonable).
+% 
+% Caveat: What happens if the correct model is not among the models considered? For NNs can the distribution in function space (provably) include the true function even if the parametric model chosen is not correct? What happens if the prior is miscalibrated? (Considerations of empirical success of NNs due to properties of physics, Tegmark paper?)
+% 
+% Calibrated uncertainty estimates are important for decision making (maybe example ambulance on the way to the hospital). Bayesian NNs hold the promise to give these uncertainty estimates, as opposed to the currently standard ML NNs.
+% 
+% Difference between uncertainty for i.i.d. test data and test data of shifted distribution. Both necessary for real world applications.
 
-Introduce neural networks as flexible function approximators. Fixed basis functions are not good enough, since hand engineering them empirically does not work well enough for many real problems. NNs can adapt their basis functions to be a good feature extractors for the problem at hand. Last layer acts (roughly) as linear predictor. Standard frequentist (maximum likelihood) training of NNs disregards the epistemic uncertainty we have about the parameters of the NN. This can lead to drastic overconfidence. Especially bad since we often have more parameters than training data points. Therefore we do not expect the posterior to be strongly peaked around the MAP estimate (and the delta spike MAP approximation to the Bayesian estimate is not reasonable).
+When perceiving or interacting with the real world both biological and artificial learning systems are constantly faced with uncertainties. The observations they can make are often noisy and many variables of interest are not directly observable. Probability theory provides a mathematically rigourous framework for expressing and manipulating these uncertainties and any rational paradigm for dealing with uncertainties that is consistent with common sense can be mapped to probability theory \parencite{cox1946probability}. Therefore, it seems unsurprising that probability theory provides crucial insights for building learning systems. !! More introduction and mentioning Jaynes !!
 
-Caveat: What happens if the correct model is not among the models considered? For NNs can the distribution in function space (provably) include the true function even if the parametric model chosen is not correct? What happens if the prior is miscalibrated? (Considerations of empirical success of NNs due to properties of physics, Tegmark paper?)
+Probability theory has two fundamental rules from which the other results can be derived. The first one is the sum rule:\footnote{In this thesis we are using a rather informal notation. We write the probability of variable $A$ to have the particular outcome $a$ as $p(a)$ instead of $p(A=a)$. Similarly, we denote the distribution over the variable $B$ as $p(B)$. For continuous variables we will denote the probability density over $x$ with $p(x)$.}
+\begin{equation}
+    \begin{split}
+        p(A) = \sum_{B} p(A, B) 
+    \end{split}
+\end{equation}
+for discrete variables, and 
+\begin{equation}
+    \begin{split}
+        p(x) = \int p(x, y) \dif y 
+    \end{split}
+\end{equation}
+for continuous variables. The second one is the product rule
+\begin{equation}
+    \begin{split}
+        p(A, B) = p(A|B)p(B)
+    \end{split}
+\end{equation}
+which applies in the same form also to continuous variables.
+From applying the product rule twice one can derive Bayes theorem also called the law of inverse probability:
+\begin{equation}
+    \begin{split}
+        p(A | B) &= \frac{p(A, B)}{p(B)}\\
+        &= \frac{p(B | A) p(A)}  {p(B)} % = \frac{p(B | A) p(A)}  {p(B)}
+    \end{split}
+\end{equation}
+This theorem has wide ranging applications from statistics through engineering to philosophy. For machine learning systems in particular, Bayes theorem allows the likely values of unobserved variables like the parameters $\vect{\theta}$ of a model to be inferred from data $\mathcal{D}$:
+\begin{equation}
+    \begin{split}
+        p(\vect{\theta} | \mathcal{D}) = \frac{p(\mathcal{D} | \vect{\theta}) p(\vect{\theta})}  {p(\mathcal{D})}
+    \end{split}
+\end{equation}
+We can think of $p(\mathcal{D})$ as a normalizing constant, which ensures that the integral of $p(\vect{\theta} | \mathcal{D})$ over all values of $\vect{\theta}$ is 1. Using the sum rule this quantity can also be expressed in terms of the likelihood and prior in the numerator:\footnote{In this thesis we make an informal jump from the sum, product and Bayes rule for discrete variables to continuous variables. Actually, showing that these rules apply equally for continuous variables requires using measure theory, but for our purposes this informal treatment is sufficient.}
+\begin{equation}
+    \begin{split}
+        p(\mathcal{D}) = \int p(\mathcal{D} | \vect{\theta}) p(\vect{\theta}) \dif \vect{\theta}
+    \end{split}
+\end{equation}
 
-Calibrated uncertainty estimates are important for decision making (maybe example ambulance on the way to the hospital). Bayesian NNs hold the promise to give these uncertainty estimates, as opposed to the currently standard ML NNs.
+In conditional modelling like regression and classification the data is split into inputs $\vect{X}$ and targets $\vect{y}$ which are to be predicted given the inputs. $\vect{X}$ is an $n \times d$ matrix where $n$ is the number of data points and $d$ is the dimensionality of the input space. In this setting, the focus lies on modelling the functional relationship of $\vect{y}$ given $\vect{X}$ and the distribution $p(\vect{y} | \vect{X})$, while the distribution of the inputs $p(\vect{X})$ is assumed not to carry information about the likely function values and is therefore disregarded \parencite[Chapter~14.1]{gelman2014bayesian}. Bayes theorem then takes the form:
+\begin{equation}
+    \begin{split}
+        p(\vect{\theta} | \vect{X}, \vect{y}) &= \frac{p(\vect{y} | \vect{\theta}, \vect{X}) p(\vect{\theta} | \vect{X})}  {p(\vect{y} | \vect{X})} \\
+        &= \frac{p(\vect{y} | \vect{\theta}, \vect{X}) p(\vect{\theta})}  {p(\vect{y} | \vect{X})}
+    \end{split}
+\end{equation}
+where we have used that the prior for the parameters is independent of the observed $\vect{X}$ values in the second line. In most cases, we will drop the explicit dependence on $\vect{X}$ to keep the notation uncluttered.
+\begin{equation}
+    \begin{split}
+        p(\vect{\theta} | \vect{y}) = \frac{p(\vect{y} | \vect{\theta}) p(\vect{\theta})}  {p(\vect{y})}
+    \end{split}
+\end{equation}
+Unlike statistics, machine learning is mostly concerned with predictions of a model rather than the posterior distributions of the parameters themselves. For new data $\vect{X}'$, $\vect{y}'$ we are interested in the distribution $p(\vect{y'} | \vect{X}', \vect{X}, \vect{y})$ or more compactely $p(\vect{y}' | \vect{y})$, which describes the probabilistic prediction for observing new function values given what we have learned from observing $\vect{X}$ and $\vect{y}$\footnote{This prediction of course also depends on the model assumptions we have made, so we could more explicitly write $p(\vect{y'} | \vect{X}', \vect{y}, M)$, where $M$ describes our modelling assumptions, including the prior parameters.}. We can derive this posterior predictive distribution:
+\begin{equation}
+    \begin{split}
+        p(\vect{y}' | \vect{y}) &= \int p(\vect{y}', \vect{\theta} | \vect{y}) \dif \vect{\theta} \\
+        &=\int p(\vect{y}' | \vect{\theta}, \vect{y}) p(\vect{\theta} | \vect{y}) \dif\vect{\theta} \\
+        &= \int p(\vect{y}' | \vect{\theta}) p(\vect{\theta} | \vect{y}) \dif\vect{\theta}
+    \end{split}
+\end{equation}
+where we have used first the sum rule, then the product rule, and lastly that the prediction $p(\vect{y}' | \vect{\theta})$ is independent of previously observed data if we know the parameter values $\vect{\theta}$. From this formula it is evident that making predictions in a fully probabilistic model comprises averaging the predictions of all possible parameter values $\vect{\theta}$ weighted by their posterior probability. It is this feature of probabilistic prediction---incorporating the epistemic uncertainty we have about the parameter values into the prediction---that makes it robust against overfitting. 
 
-Difference between uncertainty for i.i.d. test data and test data of shifted distribution. Both necessary for real world applications.
+Finding the posterior and posterior predictive distribution is unfortunately in many cases not straightforward. In particular, calculating the normalization constant $p(\vect{y})=\int p(\vect{y} | \vect{\theta}) p(\vect{\theta}) \dif\vect{\theta}$ is only analytically tractable for simple models and the posterior distribution can otherwise only be approximated. A simplifying strategy that is often used is to find point estimates for the parameters, rather than full distributions. In this setting the parameters at the mode of the distribution are an obvious candidate.
+\begin{equation}
+    \begin{split}
+        \vect{\theta}^{*} = \argmax p(\vect{\theta} | \vect{y})
+    \end{split}
+\end{equation}
+Using these parameter values is known as the Maximum A Posteriori (MAP) estimate. An immediate benefit of this approach is that we can disregard the normalization constant when looking for the maximum which allows us to ignore the problematic integral. Through the Bayesian lens a MAP estimate can be viewed as approximating the posterior with a Dirac delta distribution. This approximation can be good, when the posterior is strongly peaked around a single mode or it can be bad e.g.\ when the posterior is multimodal. In regression, the MAP parameters can also be deduced as the parameter values which minimize the squared error between the model's prediction and the observed data\footnote{To be precise, the parameters which minimize the squared error are a MAP estimate in a probabilistic regression setting, if we assume that the observed function values were subject to Gaussian noise.}. 
+
+
+
+\section{Linear Regression}
+Learning functions from data is in principle a hard problem and requires making assumption about the unknown function that is to be estimated. Without assuming some kind of smoothness---continuity for instance---it would be hard to learn anything about neighbouring, but unobserved points in the input space.
+
+A mathematically well studied model for inferring functions from data is linear regression. This model assumes that the underlying function can be constructed from a weighted sum of fixed basis functions $\vect{\phi}(\vect{x})$ and that the observed function values $\vect{y}$ arise by adding noise to the true function.
+\begin{gather}
+        f(\vect{x}) = \sum_{i=1}^k \phi_i(\vect{x}) w_i = \vect{\phi}(\vect{x}) \vect{w} \\
+        y = f(\vect{x}) + \epsilon
+\end{gather}
+where $\vect{w}$ are the unknown weights and $\epsilon$ is the observation noise. The noise is often assumed to follow an independent and identically distributed (i.i.d.) Gaussian with $0$ mean and some standard deviation $\sigma$. This model has several parameters that need to be inferred from the data, the weight vector $\vect{w}$ and the noise standard deviation $\sigma$. To be able to do Bayesian inference for these parameters, we first need to specify our (possibly vague) prior knowledge about them. There are many possible ways to specify this knowledge, but a particularly elegant one is assuming a Normal Inverse Gamma (NIG) distribution. 
+\begin{equation}
+    \begin{split}
+        \sigma^2 &\sim \inv\mathcal{G}(a, b) \\  
+        \vect{w} | \sigma^2 &\sim \mathcal{N}_k(\vect{\mu}, \sigma^2 \vect{V}) \\
+        p(\vect{w}, \sigma^2) &= \mathcal{N}_k(\vect{w} | \vect{\mu}, \sigma^2 \vect{V})  \inv\mathcal{G}(\sigma^2 | a, b) \\
+        &= \nig(\vect{w}, \sigma^2 | \vect{\mu}, \vect{V}, a, b) \\
+    \end{split}
+\end{equation}
+    % p(\vect{w}, \sigma^2) = p(\vect{w} | \sigma^2) p(\sigma^2) = \mathcal{N}_k(\vect{w} | \vect{\mu}, \sigma^2 \vect{V}) \inv\mathcal{G}(\sigma^2 | a, b) \\
+where $\inv\mathcal{G}$ is an inverse gamma distribution, $\mathcal{N}_k$ is a $k$ dimensional multivariate normal distribution, and $a$, $b$, $\vect{\mu}$, and $\vect{V}$ are the parameters of the NIG distribution. We make the assumption that the likelihood is Gaussian
+\begin{equation}
+    \begin{split}
+        y | \vect{w}, \sigma^2  \sim  \mathcal{N}_n (\vect{\Phi} \vect{w}, \sigma^2 I) 
+    \end{split}
+\end{equation}
+where $\vect{\Phi}$ is the $n \times k$ feature matrix that arises by applying the k basis functions $\vect{\phi}(\vect{x})$ to all observed inputs $\vect{x}$ in $\vect{X}$. Since a NIG prior is conjugate to a Gaussian likelihood the model is analytically tractable and results in a posterior distribution which is a NIG as well. The parameters for the posterior NIG can then be straightforwardly computed:
+\begin{equation}
+    \begin{split}
+        \vect{V}_n &= (\vect{\Phi}^T \vect{\Phi} + \vect{V}_0^{-1})^{-1} \\
+        \vect{\mu}_n &= \vect{V}_n (\vect{V}_0^{-1} \vect{\mu}_0 + \vect{\Phi}^T \vect{y}) \\
+        a_n &= a_0 + \frac{n}{2} \\
+        b_n &= b_0 + \frac{1}{2} (\vect{y}^T \vect{y} + \vect{\mu}_0^T \vect{V}_0^{-1}\vect{\mu}_0 - \vect{\mu}_n^T \vect{V}_n^{-1} \vect{\mu}_n)
+    \end{split}
+\end{equation}
+where variables with a 0 index represent the prior parameters and with an $n$ index represent the posterior parameters after having seen $n$ data points. The NIG posterior distribution is then:
+\begin{equation}
+    \begin{split}
+    p(\vect{w}, \sigma^2 | \vect{y}) &= \mathcal{N}_k(\vect{w} | \vect{\mu}_n, \sigma^2 \vect{V}_n) \inv\mathcal{G}(\sigma^2 | a_n, b_n)  \\  
+    &= \nig(\vect{w}, \sigma^2 | \vect{\mu}_n, \vect{V}_n, a_n, b_n)
+    \end{split}
+\end{equation}
+
+For the NIG linear regression, the posterior predictive distribution is also analytically tractable. Assuming we have collected $n'$ new inputs $\vect{X}'$ it is an $n'$ dimensional t-distribution
+\begin{equation}
+    \begin{split}
+        p(\vect{y}' | \vect{y}) &= \int p(\vect{y}' | \vect{\theta}) p(\vect{\theta} | \vect{y}) \dif\vect{\theta} \\
+        &=  \int \mathcal{N}_{n'} (\vect{y}' | \vect{\phi}(\vect{x}) \vect{w}, \sigma^2 I)  \nig(\vect{w}, \sigma^2 | \vect{\mu}_n, \vect{V}_n, a_n, b_n) \dif \vect{w} \dif\sigma^2 \\
+        &=  t_{n'}(\vect{y}' | 2a_n, \vect{\Phi}' \mu_n, \frac{b_n}{a_n} (I + \vect{\Phi}' V_n \vect{\Phi}^{\prime T}))
+    \end{split}
+\end{equation}
+where $\vect{\Phi}'$ is the corresponding feature matrix to $\vect{X}'$. 
+
+In this model, the basis functions dictate, what we can learn about the likely function values for inputs that lie far away from the training points. If the basis functions are assumed to be global---polynomials for instance---the estimated function values on the whole input space will be strongly influenced by the training data. If on the other hand the basis functions are assumed to be local---e.g.\ radial basis functions---the models ability to generalize to distant regions of the input space are limited and the prediction will tend to fall back to the prior prediction for regions that are far away from the observed data.
+
 
 \end{document}
