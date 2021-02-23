@@ -2,17 +2,104 @@
 
 \begin{document}
 
+So far this thesis has introduced LLB ensembles as an approximative method that makes a reasonable trade-off. We have also seen that the addition of a Bayesian linear regression can indeed be valuable for ensembles on toy data. Naturally, the next question is how these considerations relate to empirical performance on real-world data. Since ensembles of deep neural networks are a recently introduced idea there are still important knowledge gaps to be filled even for MAP ensembles. We, therefore, consider the following research questions which are aimed at examining unknown aspects of the behavior of neural network ensembles generally as well as understanding which benefits (if any) LLB ensembles offer in practice.
+
+\begin{itemize}
+    \item How do (both MAP and LLB) ensembles perform compared to single networks? We know that ensembles must have a better (or equal) performance than the average performance of their members and we have seen that previous empirical work is in line with this. Adding a second network to a single one (and thus creating an ensemble) must not necessarily improve upon the first network in every case depending on the performance of the second, but on average a two-member ensemble should be better than a single network. How large the performance gain is, is unclear though.
+    \item When working with ensembles a natural and practically important question is how many members to train. Given that many different functions can usually explain real-world data well and that neural networks with many parameters can represent quite a range of different functions, it seems likely that neural network posteriors have many functionally different local optima. %On the other hand, in high dimensional spaces (like the parameter space of a neural network) it may be unlikely to get actual local optima which are not saddle points since local optima must be ``walled off'' in exponentially many directions.
+    While there seem to exist paths of low loss between these minima \parencite{draxler2018essentially} they still appear to be functionally different \parencite{fort2019deep}. Therefore, it seems like there is quite a lot of room for more ensemble members to increase performance. At some point, we expect diminishing returns though. 
+    
+    Initial evidence in the literature seems to suggest that 5 to 10 members are enough for good performance and further adding of members does not help much. \textcite{lakshminarayanan2017simple} introduced ensembles for deep neural networks and note that when increasing the number of members ``accuracy and the quality of predictive uncertainty improve significantly''. But they only considered a maximum ensemble size of 15 for small experiments and report most results for 5 members. In the appendix of \textcite{ovadia2019can} ensembles of up to size 50 are compared on image classification tasks (CIFAR-10 and ImageNet) including also scenarios with dataset shift (Gaussian blur) and the authors conclude that ``increasing the number of models in the ensemble improves performance with diminishing returns beyond size 5''. 
+    
+    It is however unclear, how the returns of using larger ensembles diminish precisely as a function of ensemble size, how consistent this functional relationship is across datasets and if there exists a point of convergence above which no additional gains can be realized by adding more members.
+    \item The above questions concern ensembling in general. But how do LLB ensembles perform in comparison to MAP ensembles? We have seen theoretical considerations and performance on toy data, but how does this translate into real-world datasets?
+    \item Finally it would be instructive to compare the previously mentioned methods to standard BNN models to have an absolute point of comparison for the performance metrics and not just the relative gains among ensembles. For example, how are (MAP and LLB) ensembles performing compared to VI BNNs?
+\end{itemize}
 
 
+\section{UCI Datasets}
+To answer these questions we benchmark the performance of MAP and LLB networks and ensembles, and VI on nine standardly used, real-world regression datasets. Most of these datasets can be found on the UCI machine learning repository \parencite{dua2017uci} and they were used in several previous publications concerned with probabilistic neural networks \parencite{hernandez2015probabilistic, gal2016dropout, lakshminarayanan2017simple, ghosh2018structured, sun2019functional, ober2019benchmarking}. The datasets range from small to medium size of ${\sim}300$ data points for the ``yacht'' dataset and ${\sim}45000$ data points for ``protein''. They have an input dimensionality between 4 and 16. For each dataset we obtained the train-test splits used in \textcite{gal2016dropout} and \textcite{hernandez2015probabilistic}\footnote{Train-test splits available here: https://github.com/yaringal/DropoutUncertaintyExps}. There are 20 splits for all datasets except for ``protein'' for which there are only five splits. !! Perhaps describe the data sets in more detail and | or provide a table with N and d for each data set. !! 
 
-% (predictive distribution convergence?)
-% (not only avergae log likelihood but also worst case or best case log likelihood or also looking at quantiles 0-25\%, 25-75\% and 75+)
-% How different are the members predictive distributions to eacht other?\cite{fort2019deep}
 
-% Given the supposed great complexity of Bayesian neural network posteriors (e.g. because of weight space symmetries), it seems surprising that five or ten ensemble members are enough. But the natural question is what do we mean by enough. Apparently the performance (in terms of log likelihood and mean squared error) does not improve with more members, but is that because we have approximated the true bayesian neural network posterior sufficiently well, or at least the true posterior predictive distribution? Have we even reached the performance of the true posterior predictive distribution (let alone its true form)? In the following chapter we will compare ensembles to bayesian neural networks approximated by MCMC sampling to understand these questions in more detail.
+\section{Model Architecture \& Hyperparameters}
+All the models considered use Rectified Linear Units (ReLU), and all hidden layers have a size of 50 similar to previous studies (We also use 50 units in the hidden layers for ``protein'', unlike some previous papers that use 100 units for this dataset). For most experiments, we test one and two hidden layers and usually report the one hidden layer results in the appendix. We did not tune the hyperparameters for any method but simply use values that seem appropriate from experiments on toy data or prior knowledge. We run all models until convergence defined by not improving their training objective for 20 epochs, use a learning rate of $0.01$ and a batch size of 100. All models have an unconstrained variable defining the noise standard deviation through a softplus transformation $10^{-6} \cdot \log(1 + e^{0.5x})$ and we initialize it to -1 which represents a standard deviation of about $0.47$. For all models, including VI, this variable is jointly optimized and is subject to a prior. Since we train and predict in standardized (z-normalization) space (for both x and y), we might naturally put a uniform prior between zero and one on the standard deviation, but then the Bayesian linear regression of the LLB last layer would no longer be solvable in closed form. So instead we put an inverse gamma prior on the variance and try to align it with our prior knowledge. We choose the hyperparameters $a=0.5$, $b=0.01$, which are not strongly informative but still result in a distribution with 89\% of its mass below 1. Additionally, these hyperparameters result in a distribution over the standard deviation which is not too strongly peaked and has its mode at about 0.1. In practice we define this distribution on the standard deviation which makes a difference since we do a MAP estimate for this parameter and the maximum of a probability density is changing when using a nonlinear transformation like the square root \parencite[Chapter~1.2.1]{bishop2006pattern}. For the weights and biases, it is a common baseline to use $\mathcal{N}(0, 1)$ as a prior in the absence of more informative prior knowledge and we follow this practice. We initialize the weights for all MAP networks with TensorFlow's implementation of Glorot uniform \parencite{glorot2010understanding} and VI's variational Gaussian posterior with means sampled from $\mathcal{N}(0, 0.1)$ and a small standard deviation. We use the Adam optimizer \parencite{kingma2014adam}.
+!! Possibly move most of the gory details to the appendix !!
 
-% Have we approximated the bayesian neural network's predictive distribution or performance yet? 
-% What is the convergence behaviour of samples from the (HMC) posterior? Are MAP networks / ensembles in some sense better than samples from the posterior? Since they are the modes of the dist. they might represent it better.
+\section{UCI Benchmark}
+For each split of every dataset, we train VI once, 50 MAP networks, and 50 LLB networks with the feature extractor weights taken from the corresponding MAP network. We then build ensembles of up to size 50 out of the single networks. Here the larger ensembles comprise all networks of the smaller ensembles which shows us the benefits that are important in practice, namely how the performance changes when enlarging the existing ensemble. In figure \ref{fig:uci-benchmark-nll} and figure \ref{fig:uci-benchmark-rmse}, we plot the negative average test log-likelihood and root mean squared error (RMSE) respectively for VI, and MAP and LLB networks and ensembles with two hidden layers (one hidden layer results in appendix \ref{appendix:uci}). We show the performance of ensemble sizes 5, 20, and 50 here. Unlike previous papers, we report all performance metrics in normalized y-space. This has the advantage of making metrics like RMSE more interpretable without going into the details of each dataset and more comparable across datasets. To ensure comparability with previous work we report the results for unnormalized y-space in appendix \ref{appendix:uci}.
+!! To DO: Make ticks nice !!
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\textwidth]{uci_two-hidden-layers_NLLs_blend_changing} 
+    \caption{!! In the end, correct the colors mentioned here !! Benchmark of different BNN approximations on the nine UCI datasets. We compare the performance of VI (orange squares), MAP networks (blue triangles), MAP ensembles of different sizes (blueish circles), and LLB networks (purple triangles) and LLB ensembles (reddish circles) of different sizes in terms of the negative average test log-likelihood across the 20 (respectively 5 for protein) splits. Shown are mean and standard error. The plot shows the performance of ensembles of sizes 5, 20, and 50 in increasing order.}
+    \label{fig:uci-benchmark-nll}
+\end{figure}
+!! To DO: Make ticks nice !!
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\textwidth]{uci_two-hidden-layers_RMSEs_blend_changing} 
+    \caption{!! In the end, correct the colors mentioned here !! Benchmark of different BNN approximations on the nine UCI datasets. We compare the performance of VI (orange squares), MAP networks (blue triangles), MAP ensembles of different sizes (blueish circles), and LLB networks (purple triangles) and LLB ensembles (reddish circles) of different sizes in terms of the average test root mean squared error (RMSE) across the 20 (respectively 5 for protein) splits. Shown are mean and standard error. The plot shows the performance of ensembles of sizes 5, 20, and 50 in increasing order.}
+    \label{fig:uci-benchmark-rmse}
+\end{figure}
+
+As expected single networks (both MAP and LLB) perform worse in terms of both metrics compared to ensembles on all data sets. This does not only hold for the ensemble sizes shown but for all ensemble sizes and also for the one hidden layer benchmark. It does not hold on every single data split though (not shown). Even the small ensembles of size five tend to improve performance a lot above single networks and might therefore be an interesting option for practitioners.
+
+Comparing the NLL performance of MAP and LLB ensembles we find that the latter do improve upon the former on some datasets sometimes even by a lot (for example on ``naval'' and ``yacht''). On ``boston'' and ``concrete'' they perform slightly worse though. Looking at RMSE performance, the differences are not as pronounced, and on ``boston'' and ``wine'' there is hardly a difference. On the other datasets, LLB ensembles have a slight advantage.
+
+In line with previous work, the figures also show that larger ensembles perform better in terms of NLL but that returns are indeed quickly diminishing above five members. In the next section, we will analyze this behavior in more detail. Interestingly, the returns of using larger ensembles seem to follow a similar pattern whether we consider MAP or LLB networks. Relatedly, the difference between the two ensemble types seems to be relatively stable across different ensemble sizes within each dataset. These findings seem qualitatively similar for RMSE performance.
+
+Focusing on VI's NLL performance, we find that it compares quite variably to the other methods. On ``wine'' it is on par with ensembles of size 50 while on several other datasets it is quite a bit behind the other methods. It gets even worse for RMSE, where VI is the worst performing model on all but two datasets. One possible reason for VI's comparatively bad performance is its strong dependence on the initialization of the likelihood's noise scale and the variational posterior parameters which we did not tune. In toy experiments, we saw strongly differing performances depending on these hyperparameters. We also considered that our implementation may be suboptimal, but we compared the performance of our one hidden layer variational inference network to the performance in \textcite{hernandez2015probabilistic} and found that our implementation performed better for every single dataset for both NLL and RMSE sometimes by a lot even though they performed a Bayesian optimization to find good hyperparameters (but on the other hand restricted the number of training epochs to 40)\footnote{For ``protein'' this is not a valid comparison since their hidden layer has 100 neurons while our hidden layer has 50 neurons.}. This at least suggests that VI's problems do not originate from details of our implementation.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\textwidth]{uci_two-hidden-layers_NLLs_plain} 
+    \caption{Previous alternative for UCI benchmark. Are the new colours (of the other plot) an improvement?}
+    \label{fig:uci-benchmark-old}
+\end{figure}
+
+
+\section{Returns of Using Larger Ensembles}
+The previous section compared the performance of MAP and LLB ensembles with VI, and single networks and found ensembling to be quite beneficial for both MAP and LLB networks. We saw that returns are quickly diminishing, that 20 members are not that much better than 5, and that 50 members hardly improve upon 20. Previous research loosely noted that returns diminish above five members. It remains to be examined more quantitatively how the returns of larger ensembles unfold as a function of the ensemble size, how stable this pattern is across datasets, and whether there exists a point of convergence above which larger ensembles do not improve performance and which can therefore be regarded as representing the gains achievable by ensembling neural networks generally.
+
+We aim to answer these questions with the following experiment. For each split of each of the UCI datasets, we benchmarked the performance of MAP and LLB ensembles up to size 50 as above and compute average performances across the splits within a dataset. Next we scale these average performance curves such that single networks' performance lies at 0 and full 50-member ensembles' performance lies at 1 (using a min-max kind of scaling $y_{\text{scaled}} = (y - \text{min}) / (\text{max} - \text{min})$, where min is the performance of a single network and max is the performance of the full 50-member ensemble). Figure \ref{fig:uci-ensemble-sizes-ll} shows the scaled log-likelihood performance curves for each dataset for MAP and LLB ensembles while figure \ref{fig:uci-ensemble-sizes-rmse} shows RMSE performances. The y-values represent the fraction of performance gains of 50-member ensembles over single networks achieved by the different ensemble sizes. 
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\linewidth]{uci_ensemble-size-convergence_two-hidden-layers_Ensemble_NLLs} 
+        \caption{}
+        \label{fig:uci-ensemble-sizes-ll-map}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\linewidth]{uci_ensemble-size-convergence_two-hidden-layers_LLB-Ensemble_NLLs} 
+        \caption{}
+        \label{fig:uci-ensemble-sizes-ll-llb}
+    \end{subfigure}
+    \caption{Average LL performance curves for each dataset scaled such that single networks' performance lies at 0 and 50-member ensembles' performance lies at 1 (in light colors). Average of the dataset curves in black. y-values represent fraction of performance gains of 50-member ensembles over single networks achieved by different ensemble sizes. Black dots mark ensemble sizes 2, 5, 10, 20, and 50 and dashed lines connect to y-axis. a) MAP, b) LLB }
+    \label{fig:uci-ensemble-sizes-ll}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\linewidth]{uci_ensemble-size-convergence_two-hidden-layers_Ensemble_RMSEs} 
+        \caption{}
+        \label{fig:uci-ensemble-sizes-rmse-map}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\linewidth]{uci_ensemble-size-convergence_two-hidden-layers_LLB-Ensemble_RMSEs} 
+        \caption{}
+        \label{fig:uci-ensemble-sizes-rmse-llb}
+    \end{subfigure}
+    \caption{Average RMSE performance curves for each dataset scaled such that single networks' performance lies at 0 and 50-member ensembles' performance lies at 1 (in light colors). Average of the dataset curves in black. y-values represent fraction of performance gains of 50-member ensembles over single networks achieved by different ensemble sizes. Black dots mark ensemble sizes 2, 5, 10, 20, and 50 and dashed lines connect to y-axis. a) MAP, b) LLB }
+    \label{fig:uci-ensemble-sizes-rmse}
+\end{figure}
+
+The figures show that returns of using larger ensembles follow the same pattern for MAP and LLB ensembles. When comparing the black average curves in the same plot (not shown), the curves for MAP and LLB are visually indistinguishable for both LL and RMSE (the RMSE curves look slightly misaligned in the figure shown since the y-scales are slightly different). The return patterns are also remarkably similar across datasets with ``naval'' and ``yacht'' being a bit off at times but the others strongly agreeing. The ``yacht'' curve is above 1.0 for some ensemble sizes, most notably in figure \ref{fig:uci-ensemble-sizes-rmse-llb}). This is simply due to medium-sized ensembles performing slightly better than 50-member ensembles in this case as can also be seen in figure \ref{fig:uci-benchmark-rmse}.
+
+As expected we also see quickly diminishing returns in the number of members. There seems to be hardly any improvement in the region preceding 50 members and we will later see that going from 50 to 1000 members hardly changes the performance of an ensemble. Therefore we can regard the 50-member ensembles as approximately representing all gains we can achieve from ensembling neural networks in this way\footnote{Possibly we would see significant performance gains again when training much more members---one million for instance---but this seems hardly relevant for practice.}. In these experiments 2, 5, 10, and 20 networks reach on average 0.52, 0.82, 0.91, and 0.96 of the LL performance of the 50-member ensemble for MAP networks and 0.51, 0.81, 0.9, and 0.96 for LLB networks (and 0.44, 0.79, 0.91, and 0.97 (MAP) and 0.45, 0.79, 0.91, and 0.97 (LLB) for RMSE). We saw in the previous experiment that returns of ensembling over single networks seem large. And on average adding a second network gives about half the gains achievable from large ensembles not only for the uncertainty-aware metric LL but also for RMSE. Together, this makes a strong case for training at least a second network in practice to benefit from some of the possible performance gains.
+
+This chapter was concerned with questions of how ensembles of neural networks perform. We investigated whether adding a Bayesian linear regression to the last layer of all networks in an ensemble has a beneficial effect, how large the gains of ensembling are, and how they behave as a function of the number of members. The experiments indicate that LLB ensembles generally behave quite similarly to MAP networks but can have a beneficial effect on performance. In line with theoretical results and previous research, we found that ensembles generally show strong improvements above single networks. The functional relationship of performance gains to the ensemble size shows quickly diminishing returns and indicates that on average even two-member ensembles show strong performance gains over single networks that represent approximately 50\% of all gains attainable by ensembling. The next chapter will dig deeper into why the behavior of ensembles is the way it is and how they compare to ``ground truth'' posteriors found by MCMC.
 
 
 \end{document}
