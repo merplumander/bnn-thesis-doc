@@ -2,15 +2,52 @@
 
 \begin{document}
 
-...
+This thesis aimed to refine our understanding of ensembles as approximate Bayesian neural networks. To this end, we first introduced neural linear ensembles that combine the ideas of ensembling probabilistic neural networks \parencite{lakshminarayanan2017simple} and estimating the epistemic uncertainty for the parameters in the last layer \parencite{snoek2015scalable}. Neural linear ensembles thereby seem to make a favorable trade-off where they retain the ability of ensembles to capture functionally different modes of the posterior while enhancing the epistemic uncertainty estimation within that mode through the closed-form Bayesian linear regression for the last layer. Computationally, the additional effort over MAP ensembles is negligible and the ability to parallelize training is preserved.
 
-\section{Limitations}
-- only one architecture: single hidden layer with 50 units
+We empirically tested the performance of MAP and NL ensembles on the popular UCI datasets and, in line with previous research \parencite{ovadia2019can}, we found ensembling to be quite beneficial for performance both in terms of prediction accuracy and uncertainty estimation. We also found NL ensembles to be able to improve upon standard ensembles on some datasets. This suggests that NL ensembles can indeed be useful in practice. Additionally, we benchmarked the performance of both MAP and NL ensembles when increasing the number of members. The two methods show a remarkably similar functional relationship of the fraction of returns that can be realized with few members. 50 members seem to approximately deliver all gains that can be realized through ensembling on those datasets with a realistic number of members. For practical purposes, the small ensembles seem especially interesting as they show already most of the returns that can be achieved with larger ensembles. Two, five, and ten members achieve on average approximately 50, 80, and 90\% of the performance increases of large ensembles over single networks in terms of RMSE and LL and these results were relatively stable across datasets and hidden layer sizes. As the cost of ensemble training increases linearly with the number of members, the small ensembles will likely be preferred when the cost of computation is taken into account. It is possible that more members above 50 still have a beneficial effect on performance for larger architectures and datasets where even more functions can explain the data well. Different MAP ensemble sizes had already previously been compared \parencite{ovadia2019can} but quantitative statements for the achievable fraction of gains and comparisons across datasets and architectures had been lacking.
 
-- only homoscedastic noise (reason: to compare fairly with LLB ensembles, but map ensemble should perform better with heteroscedasticity allowed)
+Since the relationship of ensembles to the true Bayesian neural network is not well understood, we aimed to examine it in more detail. As was previously noted, Markov chain Monte Carlo methods---the gold standard for approximating posterior distributions---cannot explore the full weight posterior of a realistically-sized neural network given any reasonable computation budget due to the vast number of weight symmetries \parencite{papamarkou2019challenges}. This issue is not as grave for the posterior predictive distribution that we care about in practice since all weight symmetries, by definition, collapse to the same function. Yet, assessing convergence of the predictive distribution directly is hard with the standard diagnostic tools for MCMC chains. We proposed the trick of applying convergence diagnostics such as potential scale reduction directly to the parameters of the sampled predictive distributions at specific points to judge convergence. With this tool, we found that even \numprint{500000} MCMC samples were not sufficient to achieve a good approximation to the posterior predictive in one case. This suggests that neural network research relying on an MCMC ``ground truth'' should carefully evaluate the quality of the approximation obtained rather than solely rely on a large number of samples to be sufficient.
+We subsequently compared ensembles of different sizes to samples from the HMC posterior in terms of performance and Wasserstein distance to the approximate ground truth posterior predictive. Both MAP and NL ensembles do not reach the performance of HMC and still show a significant gap towards HMC's posterior predictive. Nevertheless, we found that increasing the ensemble size reduces the distance to the approximate posterior predictive, which has also been reported in \textcite{wilson2020bayesian}. Furthermore, single MAP and NL networks showed better LL performance than HMC samples but when combining them to form an ensemble they show more quickly diminishing returns than samples from the approximate posterior. This can likely be attributed to the greater functional diversity among the HMC samples. While deep ensembles show state-of-the-art performance in scalable uncertainty estimation on large datasets, our findings indicate that there is likely still a lot of room for improvements. 
+%Our findings also underline that improved log-likelihood performance does not necessarily imply a closer approximation to the posterior predictive. 
 
-- HMC UCI Gap
+% \section{Related Work}
+% This thesis builds on previous work
 
-- Why is VI performance so bad?
+\section{Further Work}
+In this work, we focused on models with homoscedastic noise variance to compare fairly to NL models for which closed-form last layer solutions are only available for the homoscedastic case. Future work might explore cheap ways that allow for estimation of the epistemic uncertainty in the last layer when allowing heteroscedasticity. Additionally, the results of ensemble returns as a function of the number of members and the comparison to HMC's posterior predictive should be checked to hold in the heteroscedastic case as well. While these results seemed qualitatively similar for one and two hidden layers, it should further be investigated whether this holds also for the large-scale datasets and architectures common in deep learning practice.
+Another interesting avenue would be to explore HMC's convergence and performance on the UCI gap data splits.
+
+Ensembling individual networks is most beneficial when the functional explanations for the data are diverse. A natural approach to obtain more diverse predictions is to include different architectures (e.g.\ in the number of layers, hidden units, and activation functions) into the ensemble. A priori, we usually have no clear preference for one architecture over another and a fully Bayesian approach therefore also includes a prior over architectures. A posterior over architectures seems computationally hard to obtain though. Nevertheless, it might be worthwhile to include different sensible architectures similar to how it is beneficial to ensemble networks of the same architecture although we do not know the correct mixture coefficients. Contrary to some other approaches to diversify ensemble member predictions, working with different architectures also retains the ability to parallelize training.
+
+The idea of ensembling independently trained networks that (hopefully) represent functionally different modes can likely be fruitfully combined with more methods that estimate epistemic uncertainty locally within a mode other than using a Bayesian last layer. \textcite{wilson2020bayesian} have already proposed one such approach where they combine ``Stochastic Weight Averaging-Gaussian'' \parencite{maddox2019simple}, that locally approximates one mode of the posterior, with ensembling. Following this idea, it seems like a worthwhile experiment to investigate the combination of Monte Carlo dropout or variational Bayes with the idea of several independently trained solutions.
+% \section{Contributions / Summary}
+% What did we do?
+% \begin{itemize}
+%     \item - We introduced LLB ensembles as a new method to quantify predictive uncertainty of neural networks with a new and seemingly favorable trade-off (computation wise). 
+% 
+%     - Discussed favorable theoretical properties and saw that they can improve upon MAP ensembles in toy experiments. 
+% 
+%     - Benchmarked their performance on real-world data and found that they perform comparably and sometimes favorably to MAP ensembles.
+% 
+%     \item - Examined the returns of using larger ensembles (both MAP and LLB) as a function of ensemble size and the consistency of this result across datasets. We found that using 2, 5, 10, and 20 members on average give ${\sim}50, {\sim}80, {\sim}90,$ and ${\sim}95$  percent of all the performance gains achievable from ensembling. And that this relationship is reasonably robust across mean performances on datasets.  Mention in the text that similar patterns emerge when scaling every single curve between 0 and 1, but that results are noisier indicating larger variations within the individual splits. This happens for example in some splits when the first individual network already had a quite good performance and the 50 member ensemble does hardly improve upon the single network in this case. Then we scale the curve between 0 and 1 and minute performance differences are suddenly quite pronounced. 
+% 
+%     \item UCI Gap: Similar findings but with generally more noise? 
+% 
+%     \item MCMC NN convergence diagnostics
+% 
+%     \item MCMC results
+% \end{itemize}
+
+% \section{Further Work}
+% - only homoscedastic noise (reason: to compare fairly with LLB ensembles, but map ensemble could potentially perform better with heteroscedasticity allowed)
+% \bigskip
+% 
+% - more architectures (other activations than ReLu, larger networks...)
+% \bigskip
+% 
+% - larger datasets
+% \bigskip
+% 
+% - HMC experiments for UCI Gap
 
 \end{document}

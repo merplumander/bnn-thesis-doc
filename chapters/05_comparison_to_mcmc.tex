@@ -2,21 +2,163 @@
 
 \begin{document}
 
-Two viewpoint metrics experiments.
-+ Test LL vs. Log Posterior plot
+In the previous chapter, we have seen how quickly the performance of ensembles of neural networks shows diminishing returns.
+Should we be surprised to reach a performance plateau in the number of members of the ensemble so quickly? Neither the shape of Bayesian neural network posteriors nor which modes MAP-trained neural networks find is well understood, so it is not clear to us what to expect a priori.
+Several research questions to investigate come up in connection with this question:
+\medskip
 
-It might be instructive to look at the convergence behaviour of posterior samples and map ensembles (when using more samples and members) in weight space, but it is not straightforward to do this comparison. We might use Wasserstein distance, but approximating Wasserstein distance with samples requires a ridiculously large amount of samples in this high dimensional space. But for neural networks we actually don't care so much about the weight space anyway.
+\noindent \textbf{Question 1}: Do the returns diminish quickly because a new member cannot change the prediction much when the ensemble is already large? At first, this seems like a possible explanation, but a doubling of the members should still be able to introduce similarly significant changes and we do not see that e.g.\ going from 25 to 50 (and we will see that going to \numprint{1000} members also gives essentially no changes). 
+\medskip
 
-Checking for convergence of Markov chain Monte Carlo chains for bayesian neural networks should focus on the space of predictive distributions and not the weight space. (The weight space of a network of [1, 100, 1] units has 100! symmetries. Which can never be explored in a reasonable amount of time. So we expect to show standard potential scale reduction to diagnose non-converged chains even when the predictive distribtuion of the chains have already converged (and that's all we care about)) ->  potential scale reduction on the means and variance of the posterior predictive distribution on test points. And predictive distribution Wasserstein distance.
-Find out whether this has been used before as a convergence criterion for MCMC bayesian neural networks. If not this both are a contribution!
+\noindent \textbf{Question 2}: What is the relationship of an ensemble's predictive distribution to the true posterior predictive? Is the true distribution approximated sufficiently well? 
+\medskip
 
-% In our experiments we realized that single samples from the HMC posterior usually perform better than map networks. Has not really turned out to be true.
+\noindent \textbf{Question 3}: Have the ensembles reached or perhaps even surpassed the performance of the ground truth Bayesian neural network without having approximated its predictive distribution well similar to \textcite{yao2019quality}? We should make sure to properly differentiate between the predictive distribution and the performance metrics. Perhaps the predictive distribution is still changing in meaningful ways but these changes are simply not captured by test log-likelihood (and RMSE). 
+%Even using the uncertainty-aware metric log-likelihood, it is hard to assess which method approximates the posterior predictive more closely. 
+Even the log-likelihood is not a good substitute for directly measuring whether the predictive distribution is approximated well.
+Assume the true posterior predictive is quite broad at a specific location but the network prediction is highly confident and happens to be accurate. The approximative method has failed to capture the full epistemic uncertainty yet is rewarded with a good LL value. In this situation, a better approximative method will be at a disadvantage. Worse inference of the predictive distribution of a bad model (that is too uncertain) is confused with improved inference.
+\medskip
 
-soap bubble argument: If we had the actual posterior we would make predictions by drawing samples from it and averaging their predictions (like we do with the HMC samples). Due to the soap bubble argument, MAP networks are not at all typical samples from the posterior in weight space ( and therefore probably also in function space). Should we expect map networks to perform better or worse than random samples from the posterior? Map networks are located at a peak of the posterior but what is that worth? We care about probability mass not probability density and this local spike might be very small in terms of volume. Second, when reparameterizing the model the modes generally change location.
+\noindent \textbf{Question 4}: What is the convergence behavior in the number of members when we ensemble samples from the true posterior (as we naturally would to make predictions given the posterior)? Will they show a similar pattern? Possibly MAP (and NL) networks are ``better'' in some sense (i.e.\ have better performance) than individual samples from the posterior? Perhaps MAP networks are a better representation of the posterior than single samples from it (perhaps they compress the information better) since they represent a local maximum of the posterior? On the other hand, maybe samples from the posterior show a greater variety in their predictive distributions, and therefore ensembling them is more beneficial?
+\medskip
 
-% (Possibly, few hmc samples are enough to improve upon map network)
-% If so, HMC cannot only provide the gold standard in terms of full posterior estimation, but it might also be seen as a tool (on top of map training) that can give us well performing ensembles at a low cost.
+\noindent \textbf{Question 5}: Does ensembling show the quickly diminishing returns because two or more of the networks in the ensemble have the same predictive distribution (weight symmetry) and therefore do not add meaningful new information\footnote{We will not address this question further, but we do have preliminary data that suggests that the ensemble members do all have different predictive distributions and this hypothesis is also supported by \textcite{fort2019deep}.}?
+\medskip
 
-UCI Gap?
+To address these questions we need to approximate the ground truth distribution of a Bayesian neural network. Of all the approximation techniques introduced in chapter \ref{sec:bnn-approximation} only Markov chain Monte Carlo methods can approximate the posterior distribution faithfully, given enough samples. In particular, Hamiltonian Monte Carlo is often seen as the gold standard for approximating BNNs. Yet, even using HMC, it is not straightforward to obtain a good estimate of the ground truth given only a practically feasible computation budget.
+%A meaningful comparison of the weight space distribution is hard due to the high dimensionality of the space and the weight symmetries. For neural networks, we are however mainly interested in the predictive distribution anyways, and there a comparison is feasible. 
+
+\section{Challenges of Using Markov Chain Monte Carlo for Neural Networks}
+In statistics, probabilistic models are usually comprised of a set of unobserved variables that are all distinguishable from each other and all have a specific, associated meaning. Neural networks, in contrast, are composed of a set of non-identifiable, general-purpose building blocks. This leads to symmetries in the weight space representation for the functional mappings from inputs to outputs. Consider a one-hidden-layer network with $L$ hidden units. Exchanging the values of all incoming weights, the bias, and all outgoing weights of one hidden unit with the corresponding values of a different hidden unit leaves the functional mapping of the network unchanged. A reordering of the hidden units is therefore functionally irrelevant, leading to $L!$ symmetries in the weight space representation of the network. This leads to problems when trying to find the posterior distribution for the weights. When the posterior has a mode at a particular setting of the weight values, this mode must be present at $L! - 1$ other locations as well\footnote{Assuming that the prior is indifferent to the reorderings of the weights that lead to symmetries.}. 
+For the toy network architecture used in chapter \ref{neural-linear-ensemble} with one input unit, three hidden units, and one output unit the number of symmetric regions is $3!=6$ and therefore still manageable. For this neural network, we can expect MCMC methods to explore the weight space fully and converge within a reasonable time. For a network with 50 hidden units, however, $50!\approx3\times 10^{64}$ symmetries are present. This renders comparisons of weight space distributions infeasible. In particular, this means that the true weight space posterior cannot be closely approximated even with HMC given only a practically feasible computation budget \parencite{papamarkou2019challenges}. Nevertheless, the real distribution of interest is not the posterior distribution but the implied distribution over functions, namely the posterior predictive distribution. For this distribution to be well approximated by MCMC it is sufficient that the functionally distinct regions of the posterior have been explored while the weight-symmetric regions collapse.
+
+Yet, some practical problems are left unsolved. With a finite amount of MCMC samples, it is not possible to guarantee that a distribution has been approximated faithfully. A number of methods have been developed over the years to help diagnose failures of approximation, but none of these methods is sufficient to ensure convergence. When no diagnostic tool indicates an approximation failure, however, this raises the confidence that the approximation obtained is good. One of the most popular diagnostics is Gelman and Rubin's potential scale reduction, $\hat{R}$ \parencite{gelman1992inference}. This diagnostic relies on several MCMC chains started from overdispersed samples from the prior. $\hat{R}$ measures the ratio of the averaged variances of the samples from within each chain to the variances of all samples combined. If the chains have not yet converged to the same distribution the potential scale reduction will be greater than 1. Commonly values below thresholds of 1.1 or 1.2 are seen as a good indication for convergence.
+
+Applying this diagnostic to neural networks, however, is not straightforward due to the weight symmetry problem described above. Chains started from overdispersed samples from the prior are very unlikely to end up in the same symmetric region, although they might all produce samples from the same implied distribution over functions. Therefore, we propose to focus on the predictive distribution directly. Applying a diagnostic such as $\hat{R}$ directly on a distribution over functions is difficult. Instead, we suggest working with the predictive distribution at specific points only. In particular, we use the parameters of the predictive distribution at the training data points to assess convergence of the Markov chains and assert afterward that the predictive distributions at the test points are also converged. In our case, the parameters of the predictive distribution at one data point are the mean and standard deviation of a 1-D Gaussian, but one can similarly apply this to the event probabilities of a categorical distribution in a classification setting or any other parametric likelihood distribution.
+
+The idea of applying MCMC convergence diagnostics to the predictive distribution at selected points rather than the parameter posterior is not limited to potential scale reduction. Other common diagnostics like trace plots and the effective sample size can similarly be used in that way.
+
+
+
+\section{Measuring the Discrepancy Between Predictive Distributions}
+Having obtained an approximate ground truth predictive distribution, we can compare its performance to that of other methods such as MAP ensembles straightforwardly. How can we compare predictive distributions themselves though?
+
+A well interpretable measure of discrepancy between two probability distributions is the Wasserstein distance, also known as earth mover's distance. Intuitively, the Wasserstein distance can be understood as an optimal transport problem. Both probability distributions are regarded as a unit pile of earth and the Wasserstein distance measures the ``cost'' associated with optimally turning one pile into the other which is the amount of earth times the mean distance it has to be moved. More formally, the $p^\text{th}$ Wasserstein distance between two random variables $X$ and $Y$ on $\mathbb{R}^d$ marginally distributed as the distributions $\eta$ and $\nu$ is defined as:
+\begin{equation}
+    \begin{split}
+        W_p(\eta, \nu) = \inf_{X\sim \eta, Y\sim \nu} (E[||X - Y||_p])^{\frac{1}{p}}, \hspace{2em} p \ge 1
+    \end{split}
+\end{equation}
+where the infimum is taken over all pairs of $X$ and $Y$ and $|| \cdot ||_p$ is the p-norm of a vector \parencite{panaretos2019statistical}. We are interested in the distances between the predictive mixture distributions of the ensemble and the HMC samples. Unfortunately, the Wasserstein distance cannot be computed in closed form for mixtures of Gaussians (or mixtures of t-distributions) and so we resort to approximating it by a sampling procedure. The predictive distribution at a single point in input space is a distribution on $\mathbb{R}$. For 1-D distributions, the choice of $p$ is irrelevant and we can approximate the Wasserstein distance between two such distributions by taking a number of samples from both and computing the optimal transport cost between the samples. The error introduced through this approximation seems to be small compared to the difference between the distributions when using enough samples\footnote{Additionally, the Wasserstein distance between the predictive distributions of several MCMC chains on a set of points could also be used as a convergence diagnostic. An approximation failure would then be indicated by a Wasserstein distance between the chains that is larger than a threshold.}. 
+
+
+
+\section{Experiments on UCI datsets}
+With the tools available to judge MCMC convergence and compare predictive distributions, we can focus on empirical evaluations. We pick three small datasets---``yacht'', ``boston'', and ``concrete''\footnote{We also considered ``energy'', but while potential scale reduction indicated convergence, the MCMC acceptance rate was very low for unknown reasons. Therefore, we decided to err on the safe side and exclude this experiment.}---and use the first train test split for each one. For ``yacht'', we consider both a two-hidden-layer and a one-hidden-layer architecture, while for the others we only consider a one-hidden-layer architecture. We keep the hyperparameters the same as in previous experiments and train \numprint{1000} MAP and NL networks.
+
+\subsection*{MCMC Details}
+We use TensorFlow Probability's MCMC implementation \parencite{lao2020tfp} to obtain samples from the posterior of the BNN with HMC and took great care to write the code in a way that allows to use the speed-ups that TensorFlow Probability provides.
+%, especially to allow for Single Instruction Multiple Data (SIMD) parallelism. Indeed, for small networks (a single input dimension, two hidden layers with 20 and 10 neurons and a single output dimension) running 128 chains takes about twice as long as running a single chain (on a 2016 Macbook Pro with a 2,7 GHz Quad-Core Intel Core i7 processor). These tremendous multi-chain speed-ups are unfortunately mostly lost for the UCI experiments (likely due to the larger matrix multiplications). 
+For the UCI experiments, we run four (respectively two for the two-hidden-layer ``yacht'' experiment) chains randomly initialized from the overdispersed prior. We use TensorFlow Probability's dual averaging stepsize adaption \parencite{hoffman2014no} to find a good step size, use 100 leapfrog steps, and discard the first \numprint{50000} samples as burn-in. Then we obtain a total of \numprint{500000} samples. Next, we check for convergence with potential scale reduction applied to the predictive distribution at the training data points as described above. For all one-hidden-layer experiments, we found the potential scale reduction of all parameters to lie below 1.2. For the two-hidden-layer architecture, however, we had to obtain a total of \numprint{1500000} samples to get below the threshold of 1.2. Afterward, we checked $\hat{R}$ for the predictive distributions at the test points and found it to be below 1.2 as well in all cases. To get HMC to converge for the two-hidden-layer architecture, we had to use an additional trick. When starting the chains from points of the overdispersed prior distribution, as is suggested when checking convergence with potential scale reduction, the chains take long to find a region of high posterior probability. We, therefore, take samples from the overdispersed prior, MAP train for a few epochs, and then start HMC sampling from there.
+
+
+\subsection*{Experimental Setup}
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_one-hidden-layer_HMC-Map-Ensemble-LL} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_two-hidden-layers_HMC-Map-Ensemble-LL} 
+    \end{subfigure}
+    
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_two-hidden-layers_HMC-Map-Ensemble-RMSE} 
+        % \setlength{\figwidth}{.99\textwidth}
+        % \setlength{\figheight}{.35\textheight}
+        % \input{figures/yacht_01_two-hidden-layers_HMC-Map-Ensemble-RMSE.tex}
+    \end{subfigure}
+    
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_one-hidden-layer_HMC-Map-Ensemble-predictive-WD} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{yacht_01_two-hidden-layers_HMC-Map-Ensemble-predictive-WD} 
+    \end{subfigure}
+    
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=0.6\linewidth]{hmc_uci_legend} 
+    \end{subfigure}
+    
+    \caption{Comparison of the negative LL (top row) and RMSE (middle row) performance of ensembles of different sizes comprised of MAP networks (blue), NL networks (orange), and HMC sample-networks (green) and full HMC (black) on the ``yacht'' dataset. Bottom row): predictive distribution Wasserstein distance to full HMC computed by sampling. One-hidden-layer architecture (left column)  and two-hidden-layer architecture (right column).}
+    \label{fig:yacht_hmc_comparison}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{boston_01_one-hidden-layer_HMC-Map-Ensemble-LL} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{concrete_01_one-hidden-layer_HMC-Map-Ensemble-LL} 
+    \end{subfigure}
+    
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{boston_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{concrete_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+    \end{subfigure}
+    
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{boston_01_one-hidden-layer_HMC-Map-Ensemble-predictive-WD} 
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=0.98\linewidth]{concrete_01_one-hidden-layer_HMC-Map-Ensemble-predictive-WD} 
+    \end{subfigure}
+    
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=0.6\linewidth]{hmc_uci_legend} 
+    \end{subfigure}
+    
+    \caption{Comparison of the negative LL (top row) and RMSE (middle row) performance of ensembles of different sizes comprised of MAP networks (blue), NL networks (orange), and HMC sample-networks (green) and full HMC (black). Bottom row): predictive distribution Wasserstein distance to full HMC computed by sampling. ``boston'' (left column) and ``concrete'' (right column)}
+    \label{fig:boston_concrete_hmc_comparison}
+\end{figure}
+
+
+After training, we build ten independent ensembles of size 100 for MAP and NL and \numprint{10000} for HMC. Then we benchmark the RMSE and negative LL for different ensemble sizes, where larger ensembles comprise all networks of the smaller ensembles as in chapter \ref{chapter:uci-benchmark}. We also compute the metrics for full HMC. Additionally, we compute the Wasserstein distances of the predictive distributions to the predictive distribution of full HMC and also the Wasserstein distance of full HMC to itself to better estimate the bias introduced by the Wasserstein sampling approximation. For computation of the Wasserstein distance we use the predictive distributions in the z-normalized space rather than the original y-space of the datasets to improve comparability between the experiments. The mean and standard error results for the one- and two-hidden-layer architectures on ``yacht'' are visualized in figure \ref{fig:yacht_hmc_comparison} and the results for one-hidden-layer on ``boston'' and ``concrete in figure \ref{fig:boston_concrete_hmc_comparison}. We additionally include the results for ensembling all \numprint{1000} MAP and NL networks, but cannot compute a standard error for this case, of course.
+
+
+\subsection*{Results}
+
+% 
+% 
+% soap bubble argument: If we had the actual posterior we would make predictions by drawing samples from it and averaging their predictions (like we do with the HMC samples). Due to the soap bubble argument, MAP networks are not at all typical samples from the posterior in weight space ( and therefore probably also in function space). Should we expect map networks to perform better or worse than random samples from the posterior? Map networks are located at a peak of the posterior but what is that worth? We care about probability mass not probability density and this local spike might be very small in terms of volume. Second, when reparameterizing the model the modes generally change location.
+
+Qualitatively the results are remarkably similar across the different experiments. The experiments with one- and two-hidden-layer architectures on ``yacht'' also seem qualitatively similar, but the one-hidden-layer assumption seems to model the data slightly better as the full HMC log-likelihood is better. 
+
+In the figures, we can see that neither MAP nor NL ensembles of any size considered reach HMC's performance in terms of NLL or RMSE, but as we knew already larger ensembles relatively monotonically give a better performance. Going to 100 or \numprint{1000} members does not noticeably improve performance for MAP and NL ensembles above the performance of 50 member ensembles and therefore the difference between a single network and a 50 member ensemble approximately represents all gains that can realistically be achieved by ensembling neural networks in this way on those datasets.
+
+Compared to MAP and NL, HMC ensembles start out with worse LL performance but overtake the other ensembles as the number of members increases (except for ``boston'' where NL ensembles start out worse than HMC). Interestingly, for RMSE, HMC ensembles (even single samples) start out with better performance than the other ensemble types.
+
+HMC ensembles show qualitatively similar behavior when adding more members in terms of performance. Performance increases initially quickly and then starts to show strongly diminishing returns somewhere between 5 and 10 members. In contrast to the other ensembling types, however, their performance keeps slowly increasing even up to sizes of \numprint{10000} members (for LL, for RMSE they reach full performance more quickly).
+
+Turning to the differences of the predictive distributions, the figures show that MAP and NL ensembles of all sizes have not fully approximated HMC's posterior predictive in terms of Wasserstein distance in all of the experiments.
+For ``yacht'' even single samples from the HMC posterior are closer to the full posterior predictive than large MAP or NL ensembles. For boston and concrete, single HMC networks have a higher Wasserstein distance to the full posterior predictive than large MAP or NL ensembles, but with a few more members HMC ensembles overtake the other ensembling types.
+Nevertheless, ensembling does help to approximate the posterior predictive more closely and larger ensembles generally come closer.
+
+HMC sample ensembles converge more evenly in terms of Wasserstein distance to the full HMC posterior predictive compared to MAP and NL ensembles and the returns of using more samples in the HMC ensemble do not diminish as strongly as for the performance metrics.
+
+For both ``yacht'' experiments, NL ensembles are closer to the true posterior predictive than MAP ensembles, which is reflected also in that they have better LL and RMSE performance. For ``boston'', MAP ensembles have slightly lower Wasserstein distance and also perform better in terms of LL and RMSE. Interestingly, NL ensembles' performance on concrete is worse than MAP ensembles' for both LL and RMSE, but they are, nevertheless, closer to HMC's posterior predictive in terms of Wasserstein distance. This underlines the problem of using log-likelihood as a measure for the quality of the inferred approximation to the true Bayesian neural network.
+
+HMC's test log-likelihood is sometimes not fully converged for \numprint{1000} or \numprint{10000} members, even when the Wasserstein distance to the full posterior predictive indicates convergence already. Apparently, LL is quite sensitive to small differences in the predictive distribution.
+
+
 
 \end{document}

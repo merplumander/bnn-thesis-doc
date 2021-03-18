@@ -1,37 +1,130 @@
 \documentclass[../thesis.tex]{subfiles}
 
 \begin{document}
+\label{neural-linear-ensemble}
+The ideas of enhancing performance and uncertainty estimation through ensembling and the one of replacing the point estimates in the last layer of a network with the parameter distribution of a Bayesian linear regression can be combined together---an ensemble of networks with a Bayesian last layer. We will refer to this model as ``Neural Linear ensemble'' (NL ensemble) or ``Last Layer Bayesian ensemble'' (LLB ensemble). This combination seems to offer some benefits. The computational overhead over a standard MAP ensemble is negligible\footnote{At least when the penultimate layer is not huge.}. Yet, the model can capture more epistemic uncertainty since we get both, several independent ensemble members, and for each the posterior distribution of the weights of the last layer and the noise variance conditional on the point estimates of the previous layers. Because of these reasons neural linear ensembles might show similar state-of-the-art accuracy as deep MAP ensembles while further improving the estimates of predictive uncertainty. 
 
-The ideas of enhancing performance and uncertainty estimation through ensembling and the one of replacing the point estimates in the last layer of a network with the parameter distribution of a Bayesian linear regression can be combined together---an ensemble of networks with a Bayesian last layer. This combination seems to have several benefits. First, the computational overhead over a standard MAP ensemble is negligible (at least when the penultimate layer is not huge (!!mention here the computational complexity? Possibly better at the point where I introduce LLB networks!!)). Second, it captures more epistemic uncertainty, since we get the posterior distribution of the weights of the last layer and the noise variance (!! conditional on the point estimates of the previous layers. Where should I do this mathy part? Here? !!). Third, because of this it hopefully keeps or improves upon the state-of-the-art performance of MAP ensembles. 
-To better grasp the differences and similarities of this proposed Last Layer Bayesian Ensemble (LLB Ensemble) and other BNN approximations we visualize 1-D marginal distributions of two weights of a small neural network resulting from different approximation methodologies. Figure !! shows the approximate ground truth weight distributions of the two selected weights as determined by HMC and the corresponding MAP estimates. 
+\section{Visualization of Different Bayesian Neural Network Approximations}
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}{0.9\textwidth}
+    \includegraphics[width=\linewidth]{map_vs_hmc} 
+    % \centering
+    % \setlength{\figwidth}{.9\textwidth}
+    % \setlength{\figheight}{.3\textheight}
+    % \input{figures/map_vs_hmc.tex}
+    % \caption{}
+    % \label{fig:subim1}
+    \end{subfigure}
+
+    \begin{subfigure}{0.9\textwidth}
+    \includegraphics[width=\linewidth]{llb_vs_hmc}
+    % \caption{}
+    % \label{fig:subim2}
+    \end{subfigure}
+    
+    \begin{subfigure}{0.9\textwidth}
+    \includegraphics[width=\linewidth]{vi_vs_hmc}
+    % \caption{}
+    % \label{fig:subim2}
+    \end{subfigure}
+
+    \caption{Visualization of the ``ground truth'' marginal posterior distribution of two weights of a toy neural network as determined by HMC (in blue) and several approximation strategies (in green). (Top) MAP network: Approximation with a Dirac delta. (Middle) NL network: Approximation with a MAP Dirac delta for the weight from input to hidden layer and a t-distribution for the weight from hidden to output layer. (Bottom) Variational Inference: Approximation with a normal distribution. All distributions are scaled to the same height to improve interpretability.}
+    \label{fig:weight-space-approximations-1}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}{0.9\textwidth}
+    \includegraphics[width=\linewidth]{ensemble_vs_hmc}
+    % \caption{}
+    % \label{fig:subim3}
+    \end{subfigure}
+    \begin{subfigure}{0.9\textwidth}
+    \includegraphics[width=\linewidth]{llb_ensemble_vs_hmc}
+    % \caption{}
+    % \label{fig:subim4}
+    \end{subfigure}
+
+    \caption{Visualization of the ``ground truth'' marginal posterior distribution of two weights of a toy neural network as determined by HMC (in blue) and several approximation strategies (in green). (Top) MAP ensemble: Approximation with a mixture of Diracs. (Bottom) NL ensemble: Approximation with a mixture of Diracs for the weight from input to hidden layer and a mixture of t-distributions for the weight from hidden to output layer. All distributions are scaled to the same height to improve interpretability.}
+    \label{fig:weight-space-approximations-2}
+\end{figure}
+
+To better comprehend the differences and similarities of the proposed model and other BNN approximations we visualize the different approximations for a small network trained with 1-D toy data\footnote{The code for all experiments is available at https://github.com/merplumander/bnn-thesis .}. The considered network has one hidden layer with three neurons for a total of 11 parameters (3 weights from input to hidden layer, 3 biases for the hidden layer, 3 weights from hidden to output layer, 1 bias term in the output layer and the (Gaussian) noise standard deviation). We obtain the approximate ground truth posterior distribution with HMC and consider MAP, NL, Variational Inference, MAP ensemble and NL ensemble as approximation techniques.
+
+To produce the HMC ``ground truth'' posterior, we ran two chains starting from overdispersed samples from the prior, discarded the first 5000 samples as burn-in, and collected another \numprint{50000} samples. We then checked convergence with potential scale reduction \parencite{gelman1992inference} and found it to be below 1.01 for every variable (a value smaller than 1.2 or 1.1 is often thought of as indicating approximate convergence). 
+
+We cherry-pick two weights, one from input to hidden and one from hidden to output layer, and visualize their HMC ``ground truth'' marginal distributions\footnote{The visualized HMC distribution is created by applying a kernel density estimate to the samples.} together with the different approximative techniques in figures \ref{fig:weight-space-approximations-1} and \ref{fig:weight-space-approximations-2}. These visualizations are mainly intended to guide intuition and should be taken with a grain of salt. 1-D marginals of an 11-D distribution neglect and distort some of the true complexity and the modes of the full distribution do not have to coincide with the modes of the marginals. Also weight-space symmetries in neural networks can let the posterior appear complex although the resulting functions might be redundant. Nevertheless, we think these figures illustrate the trade-offs of the different approximation techniques better than abstract explanations. As is apparent from the first figure, the MAP network finds a mode of the posterior, but disregards all other parameter values. The NL model instead captures at least some of the epistemic uncertainty for the weights in the last layer and VI captures some epistemic uncertainty in all layers. These models, however, focus on a single mode and mostly neglect the presence of other modes. The MAP ensemble, in contrast, finds the other modes as well and the NL ensemble improves upon the MAP ensemble by capturing even more of the epistemic uncertainty of the last layer weights with a mixture of t-distributions. For both ensembling types, we have no guarantees to capture the modes in the right ratio to each other though.
+
+
+% \begin{figure}[h!]\ContinuedFloat
+%     \begin{subfigure}{0.9\textwidth}
+%     \includegraphics[width=\linewidth]{llb_ensemble_vs_hmc}
+%     % \caption{Caption 4}
+%     \label{fig:subim4}
+%     \end{subfigure}
+% 
+%     \caption{Visualization of the ``ground truth'' marginal posterior distribution of two weights of a toy neural network as determined by HMC (in blue) and several approximation strategies (in green). a) MAP network: Approximation with a Dirac delta. b) LLB network: Approximation with a MAP Dirac delta for the weight from input to hidden layer and a t-distribution for the weight from hidden to output layer. c) MAP ensemble: Approximation with a mixture of Diracs. d) LLB ensemble: Approximation with a mixture of Diracs for the weight from input to hidden layer and a mixture of t-distributions for the weight from hidden to output layer.}
+%     \label{fig:weight-space-approximations}
+% \end{figure}
 
 
 
+\section{Qualitative Comparison to other Bayesian Neural Network Approximations}
+Neural linear ensembles appear like a reasonable method from a weight space perspective. They capture more epistemic uncertainty than standard ensembles at negligible additional cost. But how do they rank in other qualitative dimensions compared to some of the existing Bayesian neural network approximations?
+\medskip
+
+\noindent \textbf{Bias}:
+How different are the approximate distributions from the true posterior? MCMC methods are asymptotically unbiased, meaning they will eventually sample from the true posterior in the limit of taking infinite samples. While this limit can of course not be reached in practice, MCMC methods are still seen as the gold standard for approximating BNN posteriors \parencite{yao2019quality, gal2018sufficient}. Variational methods in contrast can only find the one member among their variational family that is closest to the true posterior. Since the variational family is usually a strongly restricted set (e.g.\ multivariate Gaussians with diagonal covariance matrix) the resulting posterior approximation is biased. MAP networks approximate the posterior with a Dirac delta at a local maximum which is a gross simplification when the posterior is not strongly peaked around that mode. Bayesian neural network posteriors generally have a large number of modes (although it is not clear how many of them constitute functionally different networks and how many are just weight symmetries) and so a delta spike is hardly a good approximation. NL networks improve upon that by considering the epistemic uncertainty we have about the weights in the last layer and the noise standard deviation given the point estimates of the previous layers but cannot fully remedy the focus on a single mode. Ensemble methods can potentially represent the posterior more faithfully by incorporating different modes, but in the standard form there are no guarantees to find (functionally) different modes and there is no estimation of the mixture coefficients such that they may be quite off. Adding a Bayesian linear regression to the last layer of every ensemble member can further improve the estimation of the epistemic uncertainty, but cannot solve the fundamental problem of the mixture coefficients.
+\medskip
+
+\noindent \textbf{Computational Cost}: 
+A closer approximation to the posterior can usually be achieved by using a computationally more expensive method. Whether this is desirable depends on the context and the cost of computation. On the one end of the spectrum lies closely approximating the full posterior with MCMC which is too costly to do in practice for even medium-sized problems and on the other end MAP point estimate approximation which has been scaled to problems with hundreds of billions of data points and parameters \parencite{brown2020language}. VI approaches are more computationally expensive than point estimate training, but still scale well. For ensembles the computational effort increases linearly in the number of ensemble members and so ensembles can range from relatively cheap to quite expensive. Adding a Bayesian linear regression in the last layer is cheap compared to training the rest of the network and so NL networks and ensembles hardly increase computation time over their respective baseline. Both MAP and NL ensemble training can be parallelized.
+\medskip
+
+\noindent \textbf{Convergence}:
+Knowing whether or not an algorithm has converged and can therefore be stopped is quite important in practice. For MCMC methods assessing convergence is unfortunately not straightforward. Methods that may detect non-convergence exist but none can ensure convergence. In contrast, the optimization based methods MAP and VI are simply run until their training objective stops improving and they have thereby found a local optimum. Bayesian linear regression has a closed form solution, so convergence is not an issue and for the ensemble methods convergence is simply checked for each member.
+\medskip
+
+\noindent \textbf{Adaptability}:
+Adapting a regressor with newly available data can be beneficial for practical applications. For MCMC methods updating the samples is not straightforward, but modifying the parameters of the optimization based methods MAP and VI to reflect new data is possible. For Bayesian linear regression doing so is even simpler since closed form online updates are available. An ensemble can simply be updated by adapting the individual members.
+\medskip
 
 
-Weightspace visualization
+Neural linear ensembles are a new method to approximate BNNs and make a new trade-off. Whether this trade-off is favourable compared to other methods depends on the context, but it seems promising in scenarios where standard ensembles might have otherwise been the method of choice. In these cases, NL ensembles might potentially approximate the posterior more faithfully and have better predictive uncertainty than MAP ensembles at negligible additional cost. In the following chapters we examine with empirical benchmarks whether these theoretical considerations are reflected in practice and and we will see that NL ensembles can at least sometimes improve upon standard ensembles.
 
-
-\section{Qualitative comparison of the most popular Bayesian Neural Network Approximations}
-LLB ensembles appear like a reasonable method from a weight space perspective. They capture more epistemic uncertainty than standard ensembles at negligible additional cost. But how do they rank in other qualitative dimensions compared to some of the existing Bayesian neural network approximations?\\
-\textbf{Bias}:
-How different are the approximate distributions from the true posterior? MCMC methods are asymptotically unbiased, meaning they will eventually sample from the true posterior in the limit of taking infinite samples. While this limit can of course not be reached in practice, MCMC methods are still seen as the gold standard for approximating BNN posteriors \parencite{yao2019quality, gal2018sufficient}. Variational methods in contrast can only find the one member among their family of variational distributions that is closest to the true posterior. Since the variational family is usually a strongly restricted set (E.g.\ multivariate Gaussians with diagonal covariance matrix) the resulting posterior approximation is biased. MAP networks approximate the posterior with a Dirac delta at a local maximum which is a gross simplification when the posterior is not strongly peaked around that mode. Bayesian neural network posteriors generally have a large number of modes (although it is not clear how many of them constitute functionally different networks on how many are just weight symmetries) and so a delta spike is hardly a good approximation. MAP ensembles
-(See Siemens slides)
-
-Bias:
-
-Computational Cost: 
-
-Convergence:  Easily Checked; MAP network not improving, Last Layer BLR in closed form; HMC hard to diagnose; VI also easy
-
-Adaptability: Online updates for Bayesian linear regression. MAP feature extractor can be trained further ((transfer learning)). HMC adapting samples is problematic.
-
-More dimensions: see S's thesis 2.2.3.
-
-
-
-
-\section{Toy performance}
-
+% \section{Toy performance}
+% Not sure whether to include these results or not.
+% 
+% Can we find toy circumstances where ensembles perform badly and can NL ensembles help in those cases?
+% 
+% $\rightarrow$ Yes, ensembles underestimate the predictive uncertainty when the functional diversity in the ensemble is low \parencite{yao2019quality}. In our 1-D toy experiments this happens for example when the outer edges of the training data are approximately linear. In these cases, relu networks (perhaps unsurprisingly) tend to simply linearly extrapolate and so all ensemble members have approximately the same predictive distribution. Using LLB ensembles can remedy the problem in those cases. See figure \ref{fig:linear-outer-edge} 
+% \begin{figure}
+%     \centering
+%     \begin{subfigure}{\textwidth}
+%     \centering
+%     \includegraphics[width=0.6\linewidth]{ensemble_linear-outer-edge} 
+% 
+%     % \caption{}
+%     % \label{fig:subim1}
+%     \end{subfigure}
+% 
+%     \begin{subfigure}{\textwidth}
+%     \centering
+%     \includegraphics[width=0.6\linewidth]{llb-ensemble_linear-outer-edge}
+%     % \caption{Caption 2}
+%     % \label{fig:subim2}
+%     \end{subfigure}
+% 
+%     \begin{subfigure}{\textwidth}
+%     \centering
+%     \includegraphics[width=0.6\linewidth]{hmc_linear-outer-edge}
+%     % \caption{Caption 3}
+%     % \label{fig:subim3}
+%     \end{subfigure}
+% 
+%     \caption{Visualization of the predictive distributions of an ensemble, an LLB ensemble, and HMC for toy training data. a) The ensemble is highly overconfident outside the region where the training data falls. b) In contrast the LLB ensemble has a much larger predictive uncertainty in this region. c) The predictive ``ground truth'' uncertainty of HMC is quite broad outside the range of the training data.}
+%     \label{fig:linear-outer-edge}
+% \end{figure}
 
 \end{document}

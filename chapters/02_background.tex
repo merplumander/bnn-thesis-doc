@@ -2,8 +2,8 @@
 
 \begin{document}
 
-This thesis adopts a rather informal notation that will nonetheless be sufficient for our purposes and will help to keep the notation uncluttered so that we can put the focus on the important information.
-To establish this notation and rehearse the necessary background we first go through some relevant results from probability theory. 
+To establish the notation and rehearse the necessary background we first rehearse some relevant results from probability theory. 
+
 \section{Basic Probability Theory and Notation}
 The two fundamental rules of probability theory are the sum rule:\footnote{This thesis deals only with continuous variables and the probability density over $x$ will be denoted with $p(x)$.}
 \begin{equation}
@@ -20,23 +20,22 @@ and the product rule:
 Bayes theorem can be straightforwardly derived from applying the product rule twice:
 \begin{equation}
     \begin{split}
-        p(x | y) &= \frac{p(x, y)}{p(y)}\\
-        &= \frac{p(y | x) p(x)}  {p(y)}
+        p(x | y) &= \frac{p(x, y)}{p(y)} = \frac{p(y | x) p(x)}  {p(y)}
     \end{split}
 \end{equation}
-It has wide ranging applications from statistics through engineering to philosophy. For machine learning systems in particular, Bayes theorem allows the likely values of unobserved variables like the parameters $\vect{\theta}$ of a model\footnote{Vector valued variables are denoted as lowercase boldface e.g.\ $\vect{x}$, while matrix valued variables will be uppercase boldface, like $\vect{X}$.} to be inferred from data $\mathcal{D}$:
+It has wide ranging applications from statistics through engineering to philosophy. For machine learning systems in particular, Bayes theorem allows inferring the likely values of unobserved variables like the parameters $\vect{\theta}$ of a model\footnote{Vector valued variables are denoted as lowercase boldface e.g.\ $\vect{x}$, while matrix valued variables will be uppercase boldface, like $\vect{X}$.} from data $\mathcal{D}$:
 \begin{equation}
     \begin{split}
         p(\vect{\theta} | \mathcal{D}) = \frac{p(\mathcal{D} | \vect{\theta}) p(\vect{\theta})}  {p(\mathcal{D})}
     \end{split}
 \end{equation}
-We can think of $p(\mathcal{D})$ as a normalizing constant, which ensures that the integral of $p(\vect{\theta} | \mathcal{D})$ over all values of $\vect{\theta}$ is 1. Applying the sum and product rule this quantity can also be expressed in terms of the likelihood and prior in the numerator:
+We can think of $p(\mathcal{D})$ as a normalizing constant, which ensures that the integral of $p(\vect{\theta} | \mathcal{D})$ over all values of $\vect{\theta}$ is 1. Applying the sum and product rule, this quantity can also be expressed in terms of the likelihood and prior in the numerator:
 \begin{equation}
     \begin{split}
         p(\mathcal{D}) = \int p(\mathcal{D}, \vect{\theta}) \dif \vect{\theta} = \int p(\mathcal{D} | \vect{\theta}) p(\vect{\theta}) \dif \vect{\theta}
     \end{split}
 \end{equation}
-In conditional modelling like regression and classification the data is split into inputs $\vect{X}$ and targets $\vect{y}$. $\vect{X}$ is an $n \times d$ matrix where $n$ is the number of data points and $d$ is the dimensionality of the input space. In this setting, the focus lies on modelling the functional relationship of $\vect{y}$ given $\vect{X}$ and the distribution $p(\vect{y} | \vect{X})$, while the distribution of the inputs $p(\vect{X})$ is assumed not to carry information about the likely function values and is therefore disregarded \parencite[Chapter~14.1]{gelman2014bayesian}. Bayes theorem then takes the form:
+In conditional modelling like regression and classification the data is split into inputs $\vect{X}$ and targets $\vect{y}$. $\vect{X}$ is an $n \times d$ matrix where $n$ is the number of data points and $d$ is the dimensionality of the input space. In this setting, the focus lies on modelling the functional relationship of $\vect{y}$ given $\vect{X}$ and the distribution $p(\vect{y} | \vect{X})$, while the distribution of the inputs $p(\vect{X})$ is assumed not to carry information about the likely function values and is therefore disregarded \parencite[Chapter~14.1]{gelman2014bayesian}. Bayes theorem then takes the form
 \begin{equation}
     \begin{split}
         p(\vect{\theta} | \vect{X}, \vect{y}) &= \frac{p(\vect{y} | \vect{\theta}, \vect{X}) p(\vect{\theta} | \vect{X})}  {p(\vect{y} | \vect{X})} \\
@@ -50,7 +49,7 @@ where we have used that the prior for the parameters is independent of the obser
     \end{split}
 \end{equation}
 
-Unlike statistics, machine learning is mostly concerned with predictions of a model rather than the posterior distributions of the parameters themselves. For new data $\vect{X}'$, $\vect{y}'$ we are interested in the distribution $p(\vect{y'} | \vect{X}', \vect{X}, \vect{y})$ or more compactely $p(\vect{y}' | \vect{y})$, which describes the probabilistic prediction for observing new function values given what we have learned from observing $\vect{X}$ and $\vect{y}$\footnote{This prediction of course also depends on the model assumptions we have made, so we could more explicitly write $p(\vect{y'} | \vect{y}, M)$, where $M$ describes our modelling assumptions, including the prior parameters.}. We can derive this posterior predictive distribution:
+Unlike statistics, machine learning is mostly concerned with predictions of a model rather than the posterior distributions of the parameters themselves. For new data $\vect{X}'$, $\vect{y}'$ we are interested in the distribution $p(\vect{y}' | \vect{X}', \vect{X}, \vect{y})$ or more compactely $p(\vect{y}' | \vect{y})$, which describes the probabilistic prediction for observing new function values given what we have learned from observing $\vect{X}$ and $\vect{y}$\footnote{This prediction of course also depends on the model assumptions we have made, so we could more explicitly write $p(\vect{y}' | \vect{y}, M)$, where $M$ describes our modelling assumptions, including the prior parameters.}. We can derive this posterior predictive distribution
 \begin{equation}
     \begin{split}
         p(\vect{y}' | \vect{y}) &= \int p(\vect{y}', \vect{\theta} | \vect{y}) \dif \vect{\theta} \\
@@ -60,21 +59,21 @@ Unlike statistics, machine learning is mostly concerned with predictions of a mo
 \end{equation}
 where we have used first the sum rule, then the product rule, and lastly that the prediction $p(\vect{y}' | \vect{\theta})$ is independent of previously observed data if we know the parameter values $\vect{\theta}$. From this formula it is evident that making predictions in a fully probabilistic model comprises averaging the predictions of all possible parameter values $\vect{\theta}$ weighted by their posterior probability, an approach often called Bayesian model averaging. It is this feature of probabilistic prediction---incorporating the epistemic uncertainty we have about the parameter values into the prediction---that makes it robust against overconfidence and overfitting. 
 
-Finding the posterior and posterior predictive distribution is unfortunately in many cases not straightforward. In particular, calculating the normalization constant $p(\vect{y})=\int p(\vect{y} | \vect{\theta}) p(\vect{\theta}) \dif\vect{\theta}$ is only analytically tractable for simple models and the posterior distribution can otherwise only be approximated. A simplifying strategy that is often used is to find point estimates for the parameters, rather than a full distribution. In this setting, the parameters at the mode of the distribution are an obvious candidate.
+Unfortunately, finding the posterior and posterior predictive distribution is in many cases not straightforward. In particular, calculating the normalization constant $p(\vect{y})=\int p(\vect{y} | \vect{\theta}) p(\vect{\theta}) \dif\vect{\theta}$ is only analytically tractable for simple models and the posterior distribution can otherwise only be approximated. A simplifying strategy that is often used is to find point estimates for the parameters, rather than a full distribution. In this setting, the parameters at the mode of the distribution are an obvious candidate:
 \begin{equation}
     \begin{split}
-        \vect{\theta}^{*} = \argmax p(\vect{\theta} | \vect{y})
+        \vect{\theta}^{*} = \argmax_{\vect{\theta}} p(\vect{\theta} | \vect{y})
     \end{split}
 \end{equation}
-Using these parameter values is known as the Maximum A Posteriori (MAP) estimate. An immediate benefit of this approach is that we can disregard the normalization constant when looking for the maximum which allows us to ignore the problematic integral. Through the Bayesian lens, a MAP estimate can be viewed as approximating the posterior with a Dirac delta distribution. This approximation can be good, when the posterior is strongly peaked around a single mode or it can be bad e.g.\ when the posterior is multimodal. Sometimes a further simplification is used and the prior is also disregarded which leads to the so-called Maximum Likelihood (ML) estimate:
+Using these parameter values is known as the Maximum A Posteriori (MAP) estimate. An immediate benefit of this approach is that we can disregard the normalization constant when looking for the maximum which allows us to ignore the problematic integral. Through the Bayesian lens, a MAP estimate can be viewed as approximating the posterior with a Dirac delta distribution. This approximation can be good, when the posterior is strongly peaked around a single mode or it can be bad, e.g.\ when the posterior is multimodal. Sometimes a further simplification is used and the prior is also disregarded which leads to the so-called Maximum Likelihood (ML) estimate:
 \begin{equation}
     \begin{split}
-        \vect{\theta}^{*} = \argmax p(\vect{y} | \vect{\theta})
+        \vect{\theta}^{*} = \argmax_{\vect{\theta}} p(\vect{y} | \vect{\theta})
     \end{split}
 \end{equation}
-In regression, the ML parameters can also be deduced as the parameter values which minimize the squared error between the model's prediction and the observed data\footnote{To be precise, the parameters which minimize the squared error are an ML estimate in a probabilistic regression setting, if we assume that the observed function values were subject to independent and identically distributed Gaussian noise.}. 
+In regression, the parameter values which minimize the squared error between the model's prediction and the observed data are equivalent to the ML parameters when assuming that the observed function values were subject to independent and identically distributed Gaussian noise.
 
-Under these simplifications, the posterior predictive model average also collapses simply to the predictions of the MAP or ML parameters:
+Under these simplifications, the posterior predictive model average also collapses simply to the predictions of the MAP or ML parameters
 \begin{equation}
     \begin{split}
         p(\vect{y}' | \vect{y}) &= \int p(\vect{y}' | \vect{\theta}) p(\vect{\theta} | \vect{y}) \dif\vect{\theta} \\
@@ -85,19 +84,19 @@ Under these simplifications, the posterior predictive model average also collaps
 where we approximated the true posterior with a Dirac delta at $\vect{\theta}^{*}$.
 
 
-% When perceiving or interacting with the real world both biological and artificial learning systems are constantly faced with uncertainties. The observations they can make are often noisy and many variables of interest are not directly observable. Probability theory provides a mathematically rigorous framework for expressing and manipulating these uncertainties and any rational paradigm for dealing with uncertainties that is consistent with common sense can be mapped to probability theory \parencite{cox1946probability}. Therefore, it seems unsurprising that probability theory provides crucial insights for building learning systems. !! More introduction and mentioning Jaynes !!
+% When perceiving or interacting with the real world both biological and artificial learning systems are constantly faced with uncertainties. The observations they can make are often noisy and many variables of interest are not directly observable. Probability theory provides a mathematically rigorous framework for expressing and manipulating these uncertainties and any rational paradigm for dealing with uncertainties that is consistent with common sense can be mapped to probability theory \parencite{cox1946probability}. Therefore, it seems unsurprising that probability theory provides crucial insights for building learning systems. 
 % 
 
 
-\section{Linear Regression}
+\section{Bayesian Linear Regression}
 Learning functions from data is in principle a hard problem and requires making assumptions about the unknown function that is to be estimated. Without assuming some kind of smoothness---continuity for instance---it would be hard to learn anything about neighboring, but unobserved points in the input space.
 
-A mathematically well studied model for inferring functions from data is linear regression. This model assumes that the underlying function can be constructed from a weighted sum of fixed basis functions and that an observed function value $y$ arises by adding noise to the true function.
+A mathematically well studied model for inferring functions from data is linear regression. This model assumes that the underlying function can be constructed from a weighted sum of fixed basis functions and that an observed function value $y$ arises by adding noise to the true function
 \begin{gather}
         f(\vect{x}) = \sum_{i=1}^k \phi_i(\vect{x}) w_i = \vect{\phi}(\vect{x}) \vect{w} \\
         y = f(\vect{x}) + \epsilon
 \end{gather}
-where $\vect{w} \in \mathbb{R}^{k \times 1}$ are the unknown weights, $\vect{\phi}(\vect{x}) \in \mathbb{R}^{1 \times k}$ is the vector resulting from applying the k basis functions to an input vector $\vect{x}$,  and $\epsilon$ is the observation noise. The noise is often assumed to follow an independent and identically distributed (i.i.d.) Gaussian with $0$ mean and some standard deviation $\sigma$. This model has several parameters that need to be inferred from the data, the weight vector $\vect{w}$ and the noise standard deviation $\sigma$. To be able to do Bayesian inference for these parameters, we first need to specify our (possibly vague) prior knowledge about them. There are many possible ways to specify this knowledge, but a mathematically elegant one is assuming a Normal Inverse Gamma (NIG) distribution. 
+where $\vect{w} \in \mathbb{R}^{k \times 1}$ are the unknown weights, $\vect{\phi}(\vect{x}) \in \mathbb{R}^{1 \times k}$ is the vector resulting from applying the $k$ basis functions to an input vector $\vect{x}$,  and $\epsilon$ is the observation noise. The noise is often assumed to follow an independent and identically distributed (i.i.d.) Gaussian with zero mean and some standard deviation $\sigma$. This model has several parameters that need to be inferred from the data, the weight vector $\vect{w}$ and the noise standard deviation $\sigma$. To be able to do Bayesian inference for these parameters, we first need to specify our (possibly vague) prior knowledge about them. There are many possible ways to specify this knowledge, but a mathematically elegant one is assuming a Normal Inverse Gamma (NIG) distribution
 \begin{equation}
     \begin{split}
         \sigma^2 &\sim \inv\mathcal{G}(a, b) \\  
@@ -107,13 +106,13 @@ where $\vect{w} \in \mathbb{R}^{k \times 1}$ are the unknown weights, $\vect{\ph
     \end{split}
 \end{equation}
     % p(\vect{w}, \sigma^2) = p(\vect{w} | \sigma^2) p(\sigma^2) = \mathcal{N}_k(\vect{w} | \vect{\mu}, \sigma^2 \vect{V}) \inv\mathcal{G}(\sigma^2 | a, b) \\
-where $\inv\mathcal{G}$ is an inverse gamma distribution, $\mathcal{N}_k$ is a $k$ dimensional multivariate normal distribution, and $a$, $b$, $\vect{\mu}$, and $\vect{V}$ are the parameters of the NIG distribution. We make the assumption that the likelihood is Gaussian
+where $\inv\mathcal{G}$ is an inverse gamma distribution, $\mathcal{N}_k$ is a $k$ dimensional multivariate normal distribution, and $a$, $b$, $\vect{\mu}$, and $\vect{V}$ are the parameters of the NIG distribution. Assuming i.i.d.\ Gaussian noise as above means that the likelihood is a Gaussian
 \begin{equation}
     \begin{split}
-        y | \vect{w}, \sigma^2  \sim  \mathcal{N}_n (\vect{\Phi} \vect{w}, \sigma^2 I) 
+    \vect{y} | \vect{w}, \sigma^2  \sim  \mathcal{N}_n (\vect{\Phi} \vect{w}, \sigma^2 \vect{I}) 
     \end{split}
 \end{equation}
-where $\vect{\Phi}$ is the $n \times k$ feature matrix that arises by applying the $k$ basis functions $\vect{\phi}(\vect{x})$ to all observed inputs $\vect{x}$ in $\vect{X}$. Since a NIG prior is conjugate to a Gaussian likelihood the model is analytically tractable and results in a posterior distribution which is a NIG as well. The parameters for the posterior NIG can then be straightforwardly computed \parencite[Chapter~14.2]{gelman2014bayesian} \parencite{murphy2007conjugate}:
+where $\vect{\Phi}$ is the $n \times k$ feature matrix that arises by applying the $k$ basis functions $\vect{\phi}(\vect{x})$ to all observed inputs $\vect{x}$ in $\vect{X}$. Since a NIG prior is conjugate to a Gaussian likelihood the model is analytically tractable and results in a posterior distribution which is a NIG as well. The parameters for the posterior NIG can then be computed in closed form \parencite{murphy2007conjugate}; \parencite[Chapter~14.2]{gelman2014bayesian}
 \begin{equation}
     \begin{split}
         \vect{V}_n &= (\vect{\Phi}^T \vect{\Phi} + \vect{V}_0^{-1})^{-1} \\
@@ -122,7 +121,7 @@ where $\vect{\Phi}$ is the $n \times k$ feature matrix that arises by applying t
         b_n &= b_0 + \frac{1}{2} (\vect{y}^T \vect{y} + \vect{\mu}_0^T \vect{V}_0^{-1}\vect{\mu}_0 - \vect{\mu}_n^T \vect{V}_n^{-1} \vect{\mu}_n)
     \end{split}
 \end{equation}
-where variables with a $0$ index represent the prior parameters and with an $n$ index represent the posterior parameters after having seen $n$ data points. The NIG posterior distribution is then:
+where variables with a zero index represent the prior parameters and with an $n$ index represent the posterior parameters after having seen $n$ data points. The NIG posterior distribution is then:
 \begin{equation}
     \begin{split}
     p(\vect{w}, \sigma^2 | \vect{y}) &= \mathcal{N}_k(\vect{w} | \vect{\mu}_n, \sigma^2 \vect{V}_n) \inv\mathcal{G}(\sigma^2 | a_n, b_n)  \\  
@@ -134,106 +133,163 @@ For the NIG linear regression, the posterior predictive distribution is also ana
 \begin{equation}
     \begin{split}
         p(\vect{y}' | \vect{y}) &= \int p(\vect{y}' | \vect{\theta}) p(\vect{\theta} | \vect{y}) \dif\vect{\theta} \\
-        &=  \iint \mathcal{N}_{n'} (\vect{y}' | \vect{\Phi}' \vect{w}, \sigma^2 I)  \nig(\vect{w}, \sigma^2 | \vect{\mu}_n, \vect{V}_n, a_n, b_n) \dif \vect{w} \dif\sigma^2 \\
-        &=  t_{n'}(\vect{y}' | 2a_n, \vect{\Phi}' \mu_n, \frac{b_n}{a_n} (I + \vect{\Phi}' V_n \vect{\Phi}^{\prime T}))
+        &=  \iint \mathcal{N}_{n'} (\vect{y}' | \vect{\Phi}' \vect{w}, \sigma^2 \vect{I})  \nig(\vect{w}, \sigma^2 | \vect{\mu}_n, \vect{V}_n, a_n, b_n) \dif \vect{w} \dif\sigma^2 \\
+        &=  t_{n'}(\vect{y}' | 2a_n, \vect{\Phi}' \vect{\mu}_n, \frac{b_n}{a_n} (\vect{I} + \vect{\Phi}' \vect{V}_n \vect{\Phi}^{\prime T}))
     \end{split}
 \end{equation}
 where $\vect{\Phi}'$ is the corresponding feature matrix to $\vect{X}'$. 
 
-A linear regression model, can of course also be treated classically with point estimates instead of the Bayesian way described above. The MAP point estimates for the weight vector $\vect{w}$ can also be computed in closed form. Using point estimates, however, has the distinct disadvantage that epistemic uncertainty is disregarded, often leading to overconfident predictions. Additionally, overfitting the noise in the data can be a problem especially when the number of data points a small compared to the number of basis functions.
+A linear regression model can of course also be treated classically with point estimates instead of the Bayesian way described above. The MAP point estimates for the weight vector $\vect{w}$ can be computed in closed form. Using point estimates, however, has the distinct disadvantage that epistemic uncertainty is disregarded, often leading to overconfident predictions. Additionally, overfitting the noise in the data can be a problem especially when the number of data points is small compared to the number of basis functions.
 
-In the linear regression model, the basis functions dictate how the model generalizes to unobserved regions of the input space. This includes what function values are likely for inputs that lie far away from the training data. If the basis functions are assumed to be global---polynomials for instance---the estimated function values on the whole input space will be strongly influenced by the training data. If on the other hand the basis functions are assumed to be local---e.g.\ radial basis functions---the model's ability to generalize to distant regions of the input space are limited and the prediction will tend to fall back to the prior prediction for regions that are far away from the observed data. For many applications, it is not clear how to design the basis functions and we would instead prefer to let the model adapt the basis functions to the data. Neural networks are models capable of doing so and in the last decade they have driven much of the progress in machine learning.
+In the linear regression model, the basis functions dictate how the model generalizes over the input space. This includes what function values are likely for inputs that lie far away from the training data. If the basis functions are assumed to be global---polynomials for instance---the estimated function values on the whole input space will be strongly influenced by the training data. If on the other hand the basis functions are assumed to be local---e.g.\ radial basis functions---the posterior predictive will only differ from the prior predictive in a local region around the training data. For many applications, it is not clear how to design the basis functions and we would instead prefer to let the model adapt the basis functions to the data. Neural networks are models capable of doing so and in the last decade they have driven much of the progress in machine learning.
 
 
 \section{Approximation Techniques for Bayesian Neural Networks}
-In contrast to linear regression, neural networks are comprised of several processing layers with non-linear activation functions. A neural network with one hidden layer of $h$ units and an input and output dimensionality of $d$ and $o$ for example can mathematically be described by the following function:
+\label{sec:bnn-approximation}
+In contrast to linear regression, neural networks are comprised of several processing layers with non-linear activation functions. A neural network with one hidden layer of $h$ units and an input and output dimensionality of $d$ and $o$ can mathematically be described by the function
 \begin{equation}
     \begin{split}
         f(\vect{x}) = \phi_2(\phi_1(\vect{x} \vect{W}_1 + \vect{b}_1) \vect{W}_2 + \vect{b}_2)
     \end{split}
 \end{equation}
 with the weight matrices $\vect{W}_1 \in \mathbb{R}^{d \times h}$, $\vect{W}_2 \in \mathbb{R}^{h \times o}$ and bias vectors $\vect{b}_1 \in \mathbb{R}^{1 \times h}$, $\vect{b}_2 \in \mathbb{R}^{1 \times o}$ to be inferred from data, and the fixed activation functions $\phi_i$ being applied pointwise.
+The probabilistic neural network models used in this thesis are all employed for regression and we assume homoscedastic i.i.d\ Gaussian noise. The likelihood for $n$ datapoints is therefore
+\begin{equation}
+    \begin{split}
+    p(\vect{y} | \vect{\theta}) = \prod_{i=1}^n \mathcal{N} (f(\vect{x}_i), \sigma^2) 
+    \end{split}
+\end{equation}
+where $\vect{\theta}$ subsumes weight matrices, bias vectors and the noise standard deviation and $f({\cdot})$ is the corresponding feedforward neural network function (with one or more hidden layers). Given a point estimate of the parameter values $\vect{\theta}^*$ the likelihood is also the predictive distribution of a probabilistic neural network for a new data point $\vect{x}'$:
+\begin{equation}
+    \begin{split}
+    p(\vect{y}' | \vect{\theta}^*) = \mathcal{N} (f(\vect{x}'), {\sigma^{*}}^2) 
+    \end{split}
+\end{equation}
+In this thesis we call such a model a Bayesian neural network when its parameters are inferred through Bayes theorem as the normalized product of its likelihood and prior.
 
-The last layer of a neural network can be regarded as a linear regression layer when the last activation function is linear. The previous layer or layers of the network act as a feature extractor to provide the basis functions for regression. Thereby, the features do not have to be hand-engineered but can instead be automatically adapted to the data. Empirically, this tends to work better as it is often quite unclear what basis functions to use\footnote{Imagine hand-designing features such that natural images of dogs and cats can be correctly classified.}. Using neural networks instead of linear models also comes with significant disadvantages though. Formulating prior knowledge in terms of distributions on the weights of the network is not at all straightforward. Additionally, finding the posterior distribution is intractable. In fact, just computing the MAP estimate for the parameters is a difficult problem. Therefore, we can only approximate Bayesian neural network (BNN) posteriors. Even if we knew the true posterior distribution we could not compute the posterior predictive in closed form and so the posterior predictive is usually approximated with Monte Carlo samples from the approximate posterior. Quite a number of methods to approximate BNNs have been developed over the last decades and so we will only review the ones that are most important and relevant to this thesis here.
+%y | \vect{w}, \sigma^2  \sim  \mathcal{N} (f(\vect{x}), \sigma^2) 
 
-\subsection*{Markov Chain Monte Carlo Sampling}
-For many use cases having a large number of samples from the posterior distribution is just as good as knowing the distribution itself. With samples we can, for example, compute moments and quantiles of the distribution and, in a regression setting, we can use the samples to approximate the predictive distribution. Markov Chain Monte Carlo (MCMC) methods are able to provide (dependent) samples from a posterior even if only the unnormalized posterior density $p(\vect{y}|\vect{\theta})p(\vect{\theta})$ is known \parencite{andrieu2003introduction}. Luckily, this unnormalized density is usually readily available. It is simply the product of the likelihood of the parameter values $\vect{\theta}$ and their prior. So we need not consider the normalization constant $\int_{\vect{\theta}} p(\vect{y}|\vect{\theta})p(\vect{\theta})$ that is generally the intractable part of the posterior. To obtain samples these methods use a random walk in parameter space. From a given sample $\vect{\theta}_t$ a candidate $\vect{\theta}_{c}$ for the next sample is suggested from a proposal distribution, e.g.\ an isotropic normal distribution $\mathcal{N}(\vect{\theta}_t, \vect{I})$ centered at $\vect{\theta}_t$. This candidate is then accepted or rejected probabilistically based on the unnormalized density at both locations. If it is accepted, $\vect{\theta}_c$ becomes the next sample $\vect{\theta}_{t+1}$. Else the previous sample is used as a sample again $\vect{\theta}_{t+1} = \vect{\theta}_t$.
-\subsubsection*{Hamiltonian Monte Carlo}
-In high dimensional distributions with possibly complicated shapes like neural network posteriors, a fixed proposal distribution often leads to inefficient sampling. Either the proposal distribution is too wide and most proposed samples are rejected since they fall into regions of low density or the proposal distribution is too narrow and the chain can only explore the distribution in tiny steps which necessitates sampling for longer to ensure that all parts of the distribution have been visited. In these cases, using Hamiltonian Monte Carlo (HMC) is sensible \parencite{duane1987hybrid, neal1995bayesian}. HMC replaces the fixed proposal distribution with gradient-based traversing of the distribution. It uses a momentum term and the gradient of the negative log posterior to take several so-called leapfrog steps in weight space to arrive at a new proposed sample. This way, the proposal procedure adapts locally to the shape of the distribution and can generate higher acceptance rates while still exploring the distribution efficiently. The step size and number of leapfrog steps are crucial hyperparameters for the method to work efficiently but can be automatically adapted if needed \parencite{hoffman2014no}.  With HMC we can in principle approximate BNN posteriors closely, but this is only practically feasible for small networks and datasets. For even medium-sized datasets and network architectures, the computational effort becomes impractically large.
+The last layer of neural networks can be regarded as a linear regression layer when the corresponding activation function is linear. The previous layer or layers of the network act as a feature extractor to provide the basis functions for regression. Thereby, the features do not have to be hand-engineered but can instead be automatically adapted to the data. Empirically, this tends to work better as it is often quite unclear which basis functions to use\footnote{Imagine hand-designing features such that natural images of dogs and cats can be correctly classified.}. Using neural networks instead of linear models also comes with significant challenges though. Formulating prior knowledge in terms of distributions on the weights and biases of the network is not at all straightforward and finding the MAP estimate for the parameters is a difficult and non-convex problem that can only be approximately solved using iterative algorithms such as gradient descent. Finding the posterior distribution of a Bayesian neural network is consequently even more difficult and in practice it can only be approximated with varying quality depending on the approximation scheme.
+%Additionally, finding the posterior distribution is intractable. 
+%Therefore, we can only approximate Bayesian Neural Network (BNN) posteriors. 
 
-\subsection*{Variational Inference}
-!! Possibly good citations for variational Bayes in Neural Networks: \parencite{hinton1993keeping, mackay1995developments, graves2011practical} !!
-Variational Inference (VI) casts the task of approximating posterior distributions as an optimization problem. The procedure starts with a family of parametric, so-called variational distributions $q(\vect{\theta})$ (e.g.\ diagonal Gaussians) and searches for a set of parameters that minimizes some distance function to the true posterior $p(\vect{\theta}|\vect{D})$. The most common distance function used is the Kullback-Leibler (KL) divergence !! citation. This divergence is an asymmetric measure of the difference between two probability distributions $q$ and $p$, meaning that $\kl[q||p]\neq \kl[p||q]$, and does thus not qualify as a metric. $\kl[q||p]=0$ does, however, imply that the two distributions are identical. Two different approaches arise depending on which KL divergence is used. Variational Bayes \parencite{attias1999inferring}, the more standardly used method, works with $\kl[q||p]$ whereas expectation propagation \parencite{minka2001expectation} works with $\kl[p||q]$. A unifying framework arises when one considers $\alpha$-divergences between $p$ and $q$ of which both KL divergences are special cases \parencite{hernandez2016black}. In the following, we will give an overview of variational Bayes:
-A natural question that arises is: How do we compute the KL divergence between the variational distribution $q$ and the true posterior $p(\vect{\theta} | \vect{y})$ that we do not know? We will see in the following that it is sufficient to know the unnormalized posterior $\tilde{p} = p(\vect{y} | \vect{\theta}) p(\vect{\theta})$.
-\begin{align}
-    \kl[q(\vect{\theta})||p(\vect{\theta} | \vect{y})] &= \int_{\vect{\theta}} q(\vect{\theta}) \log \frac{q(\vect{\theta})} {p(\vect{\theta} | \vect{y})} \\
-    &= \int_{\vect{\theta}} q(\vect{\theta}) \log \frac{q(\vect{\theta})}  {\frac{p(\vect{y} | \vect{\theta}) p(\vect{\theta})} {p(\vect{y})}} \\
-    &= \int_{\vect{\theta}} q(\vect{\theta}) \log \frac{q(\vect{\theta})}{p(\vect{y} | \vect{\theta}) p(\vect{\theta})}  +  \int_{\vect{\theta}} q(\vect{\theta}) p(\vect{y}) \\
-    &= \int_{\vect{\theta}} q(\vect{\theta}) \log \frac{q(\vect{\theta})}{p(\vect{y} | \vect{\theta}) p(\vect{\theta})}  +   p(\vect{y}) \\
-\iff p(\vect{y}) &= \kl[q(\vect{\theta})||p(\vect{\theta} | \vect{y})]  -  \int_{\vect{\theta}} q(\vect{\theta}) \log \frac{q(\vect{\theta})}{p(\vect{y} | \vect{\theta}) p(\vect{\theta})}
-\end{align}
-!! explain some steps? !!
-!! define the ELBO in the equation above with curly braces? !!
-Since the evidence $p(\vect{y})$ is a constant w.r.t.\ the parameters $\vect{\theta}$ we can minimize the KL divergence between the variational distribution and the true posterior $\kl[q(\vect{\theta})||p(\vect{\theta} | \vect{y})]$ by maximizing the \textit{evidence lower bound} (sometimes called the variational lower bound) $-\int_{\vect{\theta}} q(\vect{\theta}) \log \frac{q(\vect{\theta})}{p(\vect{y} | \vect{\theta}) p(\vect{\theta})}$ that only depends on the unnormalized posterior $\tilde{p}$. Also since the KL divergence cannot be negative, the evidence lower bound indeed bounds $p(\vect{y})$ from below.
-!! Explain further how the ELBO is split into a likelihood and a prior term and how to approximate those !!
-
-
-
-\subsection*{Maximum a Posteriori Approximation}
-As we saw previously, a standard approximation that is used in machine learning is to consider only point estimates instead of distributions for the parameters of a model. This is a strongly simplifying move, but it allows much more efficient calculation of a result. A candidate for a good point estimate is the mode of the posterior and is known as the Maximum a Posteriori (MAP) estimate.
-\begin{align}
-    \vect{\theta}_{\mathrm{MAP}} &= \argmax_{\vect{\theta}} p(\vect{\theta} | \vect{y}) \\
-    &= \argmax_{\vect{\theta}} p(\vect{y} | \vect{\theta}) p(\vect{\theta}) \\
-\end{align}
-Luckily, the normalization factor $p(\vect{y})$ is constant w.r.t.\ $\vect{\theta}$, does therefore not change the location of the maximum, and we can focus instead on the unnormalized posterior $p(\vect{y} | \vect{\theta}) p(\vect{\theta})$. If the prior is disregarded as well, the focus will lie solely on the likelihood and and the resulting parameter value $\argmax_{\vect{\theta}} p(\vect{y} | \vect{\theta})$ is known as the Maximum Likelihood (ML) estimate. In nonlinear models like neural networks, it is usually still not straightforward to find either of the estimates. Instead, an iterative procedure like gradient ascent is usually employed. But we still need to find the gradients of the unnormalized posterior w.r.t.\ the parameters $\vect{\theta}$. We can use the fact that applying the logarithm to a function does not change the location of the maximum, since the logarithm is a monotonically increasing function. Additionally, the data is often assumed to be independent and identically distributed (i.i.d.), and therefore the likelihood is a product over individual data terms. 
-\begin{align}
-    \argmax_{\vect{\theta}} p(\vect{y} | \vect{\theta}) p(\vect{\theta}) &= \argmax_{\vect{\theta}} \log \left( p(\vect{y} | \vect{\theta}) p(\vect{\theta}) \right) \\
-    &= \argmax_{\vect{\theta}} \log \left( \prod_{i=1}^N p(y_i | \vect{\theta}) p(\vect{\theta}) \right) \\
-    &= \argmax_{\vect{\theta}} \sum_{i=1}^N \log p(y_i | \vect{\theta})  +  \log p(\vect{\theta})
-\end{align}
-Now finding the gradients of course depends on the assumptions about the data generating likelihood and the prior, but automatic differentiation, built into most modern machine learning packages, can usually take care of this. Iterative procedures like gradient ascent are usually not guaranteed to find the global maximum of a function, but instead return a local maximum. Nevertheless, these procedures lie at the heart of deep learning and its successes in the past decade. From a Bayesian perspective using point estimates for the parameters of a neural network is equivalent to approximating the posterior distribution by a Dirac delta distribution centered at a local maximum of the posterior. This approximation has made it computationally feasible for neural networks to scale to ever-larger architectures and datasets and has driven much of the successes of deep learning. It is at the same time a key reason for the inability to assess a model's confidence in its own prediction and thereby a source for the overconfidence observed neural networks \parencite{wilson2020case}.
-
-\subsection*{Deep Ensembles}
-Recently, it was proposed to use several independently trained deep MAP neural networks to get better estimates of predictive uncertainty \parencite{lakshminarayanan2017simple}. Ensemble methods have a long history in machine learning and in fact, the Bayesian model average of the predictive distribution can be seen as ensembling all parameter settings weighted by their posterior probability to make a prediction \parencite{dietterich2000ensemble}. Both MCMC and VI methods also approximate the posterior predictive with samples from the approximate posterior and are therefore implicitly using an ensemble. Using ensembles of non-probabilistic neural networks to boost their performance is also not a new idea. The novelty of the approach of \textcite{lakshminarayanan2017simple} is to train neural networks with proper scoring rules, e.g.\ the log-likelihood and for regression let the network output both the mean and the standard deviation of a Gaussian, and then ensemble these networks to obtain better predictive uncertainty estimates rather than focus on improved accuracy alone. Often many different functions can explain the training data well and so an ensemble of neural networks can better estimate the uncertainty in its prediction if the networks find different but similarly high-performing functions. In line with this reasoning, \textcite{yao2019quality} concluded that ensembles ``rely on the model diversity to produce accurate uncertainty estimates'' and sometimes fail to do so, when the individual networks' predictions are not diverse enough in function space. In the usual procedure, diversity is induced simply by using different random initializations for the weights and possibly reshuffling the order of the training data without any explicit encouragement for the networks to have diverse predictions. Diagnosing whether the found functional diversity is adequate for the task is also not straightforward.
-Nevertheless, deep ensembles have been found to provide state-of-the-art predictive uncertainties not only on test data from the same distribution, but also under distributional shift \parencite{ovadia2019can}. 
-While ensembles of neural networks were introduced as a non-Bayesian way to obtain predictive uncertainties, they can be seen as approximating the posterior with a mixture of Dirac deltas located at local maxima. The mixture coefficients are not adapted though. Still, deep ensembles may in some cases provide a better approximation to the Bayesian model average than some explicitly Bayesian methods that focus on locally approximating one mode of the posterior. To see under which circumstances this is possible, we first recall that the posterior predictive distribution is usually approximated with Monte Carlo samples from an approximate posterior $q(\vect{\theta})$, since computing the posterior predictive integral is intractable for BNNs even if we knew the true posterior:
+Even if we knew the true posterior distribution we could not compute the posterior predictive in closed form and so the posterior predictive is usually approximated using $J$ Monte Carlo samples from the approximate posterior $q(\vect{\theta})$:
 \begin{equation}
     \begin{split}
         p(\vect{y}' | \vect{y}) &= \int p(\vect{y}' | \vect{\theta}) p(\vect{\theta} | \vect{y}) \dif\vect{\theta} \\
-        &\approx \frac{1}{K} \sum p(\vect{y}' | \vect{\theta}_k) \hspace{0.1em}, \hspace{0.1em} \vect{\theta}_k \sim q(\vect{\theta})
+        &\approx \frac{1}{J} \sum_{j=1}^J p(\vect{y}' | \vect{\theta}_j) \hspace{0.1em}, \hspace{1em} \vect{\theta}_j \sim q(\vect{\theta}) \label{eq:monte-carlo-posterior-predictive}
     \end{split}
 \end{equation}
-Methods that approximate one mode of the posterior locally likely tend to produce samples with similar predictive distributions $p(\vect{y}' | \vect{\theta}_k)$. This is certainly preferable over using just the MAP parameters at the local mode, for representing epistemic uncertainty. Nevertheless, using mostly similar predictive distributions may be inferior to using samples which represent functionally different predictions $p(\vect{y}' | \vect{\theta}_k)$ from regions of high posterior density like deep ensembles seem to do \parencite{wilson2020bayesian}, since including several models with similar predictions, makes only small changes to the averaged predictive distribution.
 
-Viewed from a different angle, when the predictions of the members of the ensemble are diverse, the ensemble must have a better performance than the average performance of the members in terms of squared error and Log Likelihood (LL) as a result of Jensen's inequality. This inequality states that the convex transformation of an average must be less than or equal to the average applied after the convex transformation:
+Quite a number of methods to approximate Bayesian neural networks (BNNs) have been developed over the years and so we will only review the ones that are most important and relevant to this thesis.
+
+\subsection{Markov Chain Monte Carlo Sampling}
+For many use cases having a large number of samples from the posterior distribution is just as good as knowing the distribution itself. With samples we can, for example, compute moments and quantiles of the distribution and, in a regression setting, we can use the samples to approximate the predictive distribution as in equation \ref{eq:monte-carlo-posterior-predictive}. Markov Chain Monte Carlo (MCMC) methods construct a Markov chain with the desired distribution as its equilibrium distribution and are hence able to provide (dependent) samples from a posterior even if only the unnormalized posterior density $p(\vect{y}|\vect{\theta})p(\vect{\theta})$ is known \parencite{andrieu2003introduction}. Luckily, this unnormalized density is usually available. It is simply the product of the likelihood of the parameter values $\vect{\theta}$ and their prior. So we need not consider the normalization constant $\int p(\vect{y}|\vect{\theta})p(\vect{\theta}) \dif \vect{\theta}$ that is generally the intractable part of the posterior. The subclass of Metropolis-Hastings inspired MCMC algorithms obtain samples in a two-stage process \parencite{metropolis1953equation, hastings1970monte}. From a given sample $\vect{\theta}_t$ a candidate $\vect{\theta}_{c}$ for the next sample is suggested from a proposal distribution, e.g.\ an isotropic normal distribution $\mathcal{N}(\vect{\theta}_t, \vect{I})$ centered at $\vect{\theta}_t$. This candidate is then accepted or rejected probabilistically based on the unnormalized density at both locations. If it is accepted, $\vect{\theta}_c$ becomes the next sample $\vect{\theta}_{t+1}$. Else the previous sample is used as a sample again $\vect{\theta}_{t+1} = \vect{\theta}_t$.
+\subsubsection*{Hamiltonian Monte Carlo}
+For high dimensional distributions with possibly complicated shapes like neural network posteriors, a fixed proposal distribution often leads to inefficient sampling. Either the proposal distribution is too wide and most proposed samples are rejected since they fall into regions of low density or the proposal distribution is too narrow and the chain can only explore the distribution in tiny steps which necessitates sampling for longer to ensure that all parts of the distribution have been visited. In these cases, using Hamiltonian Monte Carlo (HMC) is sensible \parencite{duane1987hybrid, neal1995bayesian}. HMC replaces the fixed proposal distribution with gradient-based traversing of the distribution. It uses a momentum term and the gradient of the negative log posterior to take several so-called leapfrog steps in weight space to arrive at a new proposed sample. Whether the sample is accepted or rejected is then probabilistically determined with a criterion similar to that of the original Metropolis-Hastings algorithm. Since the proposal procedure adapts locally to the shape of the distribution, HMC can generate higher acceptance rates while still exploring the distribution efficiently. The step size and number of leapfrog steps are crucial hyperparameters for the method to work efficiently but can be automatically adapted if needed \parencite{hoffman2014no}.  With HMC we can in principle approximate BNN posteriors closely, but this is only practically feasible for small networks and datasets. For even medium-sized datasets and network architectures, the computational effort becomes impractically large.
+
+\subsection{Variational Inference}
+%  Possibly good citations for variational Bayes in Neural Networks: \parencite{hinton1993keeping, mackay1995developments, graves2011practical}  The idea of variational inference (VI) is to approximate the posterior distribution with a simpler, parametric distribution $q_{\vect{\phi}}(\vect{\theta})$ that has desirable properties. This casts inference as an optimization problem of finding
+The idea of variational inference (VI) is to approximate the posterior distribution with a simpler parametric distribution $q_{\vect{\phi}}(\vect{\theta})$ that has desirable properties. This casts inference as an optimization problem of finding the parameter values $\vect{\phi}$ that minimize some distance function between $q_{\vect{\phi}}(\vect{\theta})$ and the true posterior $p(\vect{\theta}|\vect{y})$ (for concreteness, $q_{\vect{\phi}}$ might be the family of Gaussians and $\vect{\phi}$ would then be the mean vector and covariance matrix). A common distance function used is the Kullback-Leibler (KL) divergence:
 \begin{equation}
     \begin{split}
-        \varphi\left(\frac{\sum a_i x_i} {\sum a_i}\right) \le \frac{\sum a_i\varphi(x_i)}{\sum a_i} 
+        \kl[q||p] = \int q(\vect{\theta}) \log \frac{q(\vect{\theta})}{p(\vect{\theta})} \dif \vect{\theta}
     \end{split}
 \end{equation}
-for convex $\varphi$ with equality holding if and only if $x_i=x_j$ $\forall i, j$ if $\varphi$ is not linear on the domain containing the $x_i$. For concave functions the inequality is reversed. Applied to the squared error of the distinct predictions $p_i$ of M models this yields
+This divergence is an asymmetric measure of the difference between two probability density functions $q$ and $p$, meaning that $\kl[q||p]\neq \kl[p||q]$, and does thus not qualify as a metric. $\kl[q||p]=0$ does, however, imply that the two distributions are identical. Two different approaches arise depending on which KL divergence is used. Variational Bayes \parencite{attias1999inferring}, the more commonly used method, works with $\kl[q_{\vect{\phi}}||p]$ whereas expectation propagation \parencite{minka2001expectation} works with $\kl[p||q_{\vect{\phi}}]$. 
+% A unifying framework arises when one considers minimizing $\alpha$-divergences between $p$ and $q_{\vect{\phi}}$ of which both KL divergences are special cases \parencite{hernandez2016black}.
+In the following, we give an overview of variational Bayes.
+
+A natural question that arises is: How do we compute the KL divergence between the variational distribution $q_{\vect{\phi}}$ and the true posterior $p(\vect{\theta} | \vect{y})$ that is intractable? We will see in the following that it is sufficient to know the likelihood $p(\vect{y} | \vect{\theta})$ and prior $p(\vect{\theta})$ and so we can disregard the problematic integral in the denominator:
 \begin{equation}
     \begin{split}
-        \left(\frac{\sum_{i=1}^M p_i}{M} - y\right)^2  < \frac{\sum_{i=1}^M (p_i - y)^2}{M}
+        \kl[q_{\vect{\phi}}(\vect{\theta})||p(\vect{\theta} | \vect{y})] &= \int q_{\vect{\phi}}(\vect{\theta}) \log \frac{q_{\vect{\phi}}(\vect{\theta})} {p(\vect{\theta} | \vect{y})} \dif \vect{\theta} \\
+        &= \int q_{\vect{\phi}}(\vect{\theta}) \log \frac{q_{\vect{\phi}}(\vect{\theta})}  {\frac{p(\vect{y} | \vect{\theta}) p(\vect{\theta})} {p(\vect{y})}} \dif \vect{\theta} \\
+        &= \int q_{\vect{\phi}}(\vect{\theta}) \log \frac{q_{\vect{\phi}}(\vect{\theta})}{p(\vect{y} | \vect{\theta}) p(\vect{\theta})} \dif \vect{\theta}  +  \int q_{\vect{\phi}}(\vect{\theta}) \log p(\vect{y}) \dif \vect{\theta} \\
+        &= \int q_{\vect{\phi}}(\vect{\theta}) \log \frac{q_{\vect{\phi}}(\vect{\theta})}{p(\vect{y} | \vect{\theta}) p(\vect{\theta})} \dif \vect{\theta}  +  \log p(\vect{y}) \\
+        &= - \int q_{\vect{\phi}}(\vect{\theta}) \log \frac{p(\vect{y} | \vect{\theta}) p(\vect{\theta})} {q_{\vect{\phi}}(\vect{\theta})} \dif \vect{\theta}  +  \log p(\vect{y}) \\
+    \iff \log p(\vect{y}) &= \kl[q_{\vect{\phi}}(\vect{\theta})||p(\vect{\theta} | \vect{y})]  +  \int q_{\vect{\phi}}(\vect{\theta}) \log \frac{p(\vect{y} | \vect{\theta}) p(\vect{\theta})} {q_{\vect{\phi}}(\vect{\theta})} \dif \vect{\theta}
     \end{split}
 \end{equation}
-with $a_i=1$ $\forall i$ and convex, non-linear function $\varphi(p) = (p-y)^2$, stating that the mean prediction of the members (i.e.\ the ensemble's prediction) must have lower squared error than the average of the squared errors of the individual members. 
-The predictive distribution of an ensemble is just the equally weighted mixture distribution of the members' predictive distributions $\sum_{i=1}^M \frac{1}{M} p(\vect{y}' | \vect{\theta}_i)$, and so we can apply Jensen's inequality again to the log likelihoods using that the logarithm is a concave function and assuming distinct predictive distributions:
+The first line is simply the definition of the KL divergence and the second line expands the posterior distribution into its components. In the third line we split the integral into two parts. In the fourth line we use that $\log p(\vect{y})$ is independent of $\vect{\theta}$ and can be taken out of the integral and that the integral over a probability distribution is 1. The fith line uses that $\log(\frac{a}{b})=-\log(\frac{b}{a})$ and the sixth line only rearranges the terms.
+Since the evidence $p(\vect{y})$ is a constant w.r.t.\ the parameters $\vect{\theta}$ of the model we can minimize the KL divergence between the variational distribution and the true posterior $\kl[q_{\vect{\phi}}(\vect{\theta})||p(\vect{\theta} | \vect{y})]$ by maximizing the \textit{evidence lower bound} (sometimes called the variational lower bound) $\int q_{\vect{\phi}}(\vect{\theta}) \log \frac{p(\vect{y} | \vect{\theta}) p(\vect{\theta})} {q_{\vect{\phi}}(\vect{\theta})} \dif \vect{\theta}$ that only depends on the unnormalized product of likelihood and prior. Also since the KL divergence cannot be negative, the evidence lower bound indeed bounds $\log p(\vect{y})$ from below.
+To find the optimal variational parameters $\vect{\phi}^{*}$ we now have to solve an optimization problem
 \begin{equation}
     \begin{split}
-        \log\left(\sum_{i=1}^M \frac{1}{M} p(\vect{y}' | \vect{\theta}_i)\right)  >  \frac{1}{M} \sum_{i=1}^M p(\vect{y}' | \vect{\theta}_i)
+        \vect{\phi}^{*} &= \argmax_{\vect{\phi}} \int q_{\vect{\phi}}(\vect{\theta}) \log \frac{p(\vect{y} | \vect{\theta}) p(\vect{\theta})} {q_{\vect{\phi}}(\vect{\theta})} \dif \vect{\theta} \\
+        &= \argmax_{\vect{\phi}} \int q_{\vect{\phi}}(\vect{\theta}) \log p(\vect{y} | \vect{\theta}) \dif \vect{\theta}  -  \int q_{\vect{\phi}}(\vect{\theta}) \log \frac{q_{\vect{\phi}}(\vect{\theta})} {p(\vect{\theta})} \dif \vect{\theta} \\
+        &= \argmax_{\vect{\phi}} E_{{q_{\vect{\phi}}(\vect{\theta})}} [\log p(\vect{y} | \vect{\theta})] - \kl[q_{\vect{\phi}}(\vect{\theta})||p(\vect{\theta})]    
     \end{split}
 \end{equation}
-which shows that the log likelihood of the ensemble must be better than the average log likelihood of the members.
+where line two only rearranges the terms and the last line uses the definition of expected value and KL divergence. This formulation splits the optimization objective into an expectation w.r.t.\ $q_{\vect{\phi}}$ of the log-likelihood that measures the fit of the model to the data and a KL divergence term which penalizes deviations from the prior. Calculating the expectation of the log-likelihood is generally not possible in closed form for neural networks. Instead it is usually approximated with Monte Carlo samples from $q_{\vect{\phi}}$. The KL term can similarly be approximated with Monte Carlo samples but for the common case of using a diagonal Gaussian for both the prior and the variational distribution, it can be calculated in closed form. The maximization step also requires approximation techniques and is commonly solved with gradient ascent. Similar to optimization in MAP neural networks, mini-batches can also be used to avoid the possibly expensive calculation of the gradient w.r.t.\ all data points in every optimization step \parencite{ranganath2014black}. A further improvement over the standard way of calculating the gradients of the Monte Carlo approximated expected value was introduced by \textcite{kingma2015variational} which greatly reduces the variance in the estimate of the gradients and therefore leads to better convergence.
 
-%!! Empirical Question: Lucky network better than the ensemble? For Gaussian predictive distributions, all with the same $\sigma$ the ensemble log-likelihood must be worse than the best member network's log-likelihood. For squared error and when the $\sigma$s are variable like in practice, we have no proofs and can answer this only empirically. !!
 
-\subsection*{Neural Linear Model}
-Neural networks can be viewed as performing non-linear feature extraction in the first layers and linear regression in the last layer (depending on the last layer's activation function). From this viewpoint, it is natural to consider whether standard MAP networks can be improved after training, by replacing the last layer with a Bayesian linear regression for which both the posterior and posterior predictive distributions are tractable in closed form as we have seen above. This idea has recently been revisited in the contexts of Bayesian optimization \parencite{snoek2015scalable}, reinforcement learning \parencite{riquelme2018deep} and benchmarked for supervised learning \parencite{ober2019benchmarking} and was found to be surprisingly competitive given its simplicity. It can not only enhance predictive accuracy but also provide improved predictive uncertainty estimates. From a probabilistic perspective, this model disregards the epistemic uncertainty of the weights in the first layers but does quantify the uncertainty for the parameters in the last layer and the noise standard deviation $\sigma$ given the values of the previous layers' weights. Often we will refer to this model simply as Last Layer Bayesian (LLB) network.
+
+\subsection{Maximum a Posteriori Approximation}
+As we have seen previously, a standard approximation that is used in machine learning is to consider only point estimates instead of distributions for the parameters of a model. This is a strongly simplifying move, but it allows much more efficient calculation of a result. A candidate for a good point estimate is the mode of the posterior and is known as the Maximum a Posteriori (MAP) estimate:
+\begin{equation}
+    \begin{split}
+        \vect{\theta}_{\mathrm{MAP}} &= \argmax_{\vect{\theta}} p(\vect{\theta} | \vect{y}) \\
+        &= \argmax_{\vect{\theta}} p(\vect{y} | \vect{\theta}) p(\vect{\theta})    
+    \end{split}
+\end{equation}
+Luckily, the normalization factor $p(\vect{y})$ is constant w.r.t.\ $\vect{\theta}$, does therefore not change the location of the maximum, and we can focus on the unnormalized posterior $p(\vect{y} | \vect{\theta}) p(\vect{\theta})$. 
+%If the prior is disregarded as well, the focus will lie solely on the likelihood and the resulting parameter value $\argmax_{\vect{\theta}} p(\vect{y} | \vect{\theta})$ is known as the Maximum Likelihood (ML) estimate. 
+In nonlinear models like neural networks, it is usually still not straightforward to find this point estimate. Instead, an iterative procedure like gradient ascent is usually employed. But we still need to find the gradients of the unnormalized posterior w.r.t.\ the parameters $\vect{\theta}$. We can use the fact that applying the logarithm to a function does not change the location of the maximum, since the logarithm is a monotonically increasing function. Additionally, the data is often assumed to be independent and identically distributed (i.i.d.), and therefore the likelihood is a product over individual data terms:
+\begin{equation}
+    \begin{split}
+        \argmax_{\vect{\theta}} p(\vect{y} | \vect{\theta}) p(\vect{\theta}) &= \argmax_{\vect{\theta}} \log \left( p(\vect{y} | \vect{\theta}) p(\vect{\theta}) \right) \\
+        &= \argmax_{\vect{\theta}} \log \left( \prod_{i=1}^N p(y_i | \vect{\theta}) p(\vect{\theta}) \right) \\
+        &= \argmax_{\vect{\theta}} \sum_{i=1}^N \log p(y_i | \vect{\theta})  +  \log p(\vect{\theta})
+    \end{split}
+\end{equation}
+Now finding the gradients of course depends on the assumptions about the data generating likelihood and the prior, but automatic differentiation, built into most modern machine learning packages, can usually take care of this. Iterative procedures like gradient ascent are usually not guaranteed to find the global maximum of a function, but instead return a local maximum. Nevertheless, these procedures lie at the heart of deep learning and its successes in the past decade. From a Bayesian perspective using point estimates for the parameters of a neural network is equivalent to approximating the posterior distribution by a Dirac delta distribution centered at a local maximum of the posterior. This approximation has made it computationally feasible for neural networks to scale to ever-larger architectures and datasets and has driven much of the success of deep learning. It is at the same time a key reason for the inability to assess a model's confidence in its own prediction and thereby a source for the overconfidence observed in neural networks \parencite{wilson2020case}.
+
+\subsection{Deep Ensembles}
+Recently, it was proposed to use several independently trained deep MAP neural networks to get better estimates of predictive uncertainty \parencite{lakshminarayanan2017simple}. Ensemble methods have a long history in machine learning and in fact, the Bayesian model average of the predictive distribution can be seen as ensembling all parameter settings weighted by their posterior probability to make a prediction \parencite{dietterich2000ensemble}. Both MCMC and VI methods also approximate the posterior predictive with samples from the approximate posterior and are therefore implicitly using an ensemble. Using ensembles of non-probabilistic neural networks to boost their performance is also not a new idea. The approach of \textcite{lakshminarayanan2017simple} is to train neural networks with proper scoring rules, e.g.\ the log-likelihood\footnote{For regression they let the network output both the mean and the standard deviation of a Gaussian.}, and then ensemble these networks. For the evaluation they put the focus on the improved predictive uncertainty estimates rather than improved accuracy alone.
+
+Often many different functions can explain the training data well and so an ensemble of neural networks can better estimate the uncertainty in its prediction if the networks find different but similarly high-performing functions. In line with this reasoning, \textcite{yao2019quality} concluded that ensembles ``rely on the model diversity to produce accurate uncertainty estimates'' and sometimes fail to do so, when the individual networks' predictions are not diverse enough in function space. In the usual procedure, diversity is induced simply by using different random initializations for the weights and possibly reshuffling the order of the training data without any explicit encouragement for the networks to have diverse predictions. Diagnosing whether the found functional diversity is adequate for the task is also not straightforward.
+Nevertheless, deep ensembles have been found to provide state-of-the-art predictive uncertainties not only on test data from the same distribution, but also under distributional shift \parencite{ovadia2019can}. 
+While ensembles of neural networks were introduced as a non-Bayesian way to obtain predictive uncertainties, they can be seen as approximating the posterior with a mixture of Dirac deltas located at local maxima. The mixture coefficients are not adapted, though. Still, deep ensembles may in some cases provide a better approximation to the Bayesian model average than some explicitly Bayesian methods that focus on locally approximating one mode of the posterior. To see under which circumstances this is possible, we recall that the posterior predictive distribution is usually approximated with Monte Carlo samples from an approximate posterior $q(\vect{\theta})$ (equation \ref{eq:monte-carlo-posterior-predictive}), since computing the posterior predictive integral is intractable for BNNs even if we knew the true posterior.
+Methods that approximate one mode of the posterior locally likely tend to produce samples with similar predictive distributions $p(\vect{y}' | \vect{\theta}_j)$. This is certainly preferable over using just the MAP parameters at the local mode, for representing epistemic uncertainty. Yet, including several models with similar predictions makes only small changes to the averaged predictive distribution. Therefore, using mostly similar predictive distributions may be inferior to using samples which represent functionally different predictions $p(\vect{y}' | \vect{\theta}_j)$ from regions of high posterior density like deep ensembles seem to do \parencite{wilson2020case}. 
+
+Viewed from a different angle, when the predictions of the members of the ensemble are diverse, the ensemble must have a better performance than the average performance of the members in terms of squared error and Log-Likelihood (LL) as a result of Jensen's inequality. This inequality states that the convex transformation of an average must be less than or equal to the average applied after the convex transformation
+\begin{equation}
+    \begin{split}
+        \varphi\left(\frac{\sum_{m=1}^M x_m} {M}\right) \le \frac{\sum_{m=1}^M \varphi(x_m)}{M} 
+    \end{split}
+\end{equation}
+for convex $\varphi$. If $\varphi$ is not linear on the domain containing the $x_m$, then equality holds if and only if $x_i=x_j$ $\forall i, j$. For concave functions the inequality is reversed. Applied to the squared error of the distinct predictions $p_m$ of M models this yields
+\begin{equation}
+    \begin{split}
+        \left(\frac{\sum_{m=1}^M p_m}{M} - y\right)^2  < \frac{\sum_{m=1}^M (p_m - y)^2}{M}
+    \end{split}
+\end{equation}
+with convex, non-linear function $\varphi(p) = (p-y)^2$, stating that the mean prediction of the members (i.e.\ the ensemble's prediction) must have lower\footnote{Equality holds if and only if $p_i=p_j$ $\forall i, j$ since $\varphi$ is not linear on the domain containing the $p_m$.} squared error than the average of the squared errors of the individual members. 
+
+The predictive distribution of an ensemble is just the equally weighted mixture distribution of the members' predictive distributions effectively treating the $M$ networks as if they were samples from an approximate posterior\footnote{Some ensemble methods work in quite a different way to Bayesian model averaging, but \textcite{wilson2020case} argue that for deep ensembles this difference is absent.} (as in equation \ref{eq:monte-carlo-posterior-predictive}):
+\begin{equation}
+    \begin{split}
+        \sum_{m=1}^M \frac{1}{M} p(\vect{y}' | \vect{\theta}_m)
+    \end{split}
+\end{equation}
+Hence, we can apply Jensen's inequality again to the log-likelihoods using that the logarithm is a concave function and assuming distinct predictive distributions
+\begin{equation}
+    \begin{split}
+        \log\left(\sum_{m=1}^M \frac{1}{M} p(\vect{y}' | \vect{\theta}_m)\right)  >  \frac{1}{M} \sum_{m=1}^M \log p(\vect{y}' | \vect{\theta}_m)
+    \end{split}
+\end{equation}
+which shows that the log-likelihood of the ensemble must be better than the average log-likelihood of the members.
+
+% Empirical Question: Lucky network better than the ensemble? For Gaussian predictive distributions, all with the same $\sigma$ the ensemble log-likelihood must be worse than the best member network's log-likelihood. For squared error and when the $\sigma$s are variable like in practice, we have no proofs and can answer this only empirically. 
+
+\subsection{Neural Linear Model}
+Neural networks can be viewed as performing non-linear feature extraction in the first layers and linear regression in the last layer (depending on the last layer's activation function). From this viewpoint, it is natural to consider whether standard MAP networks can be improved after training, by replacing the last layer with a Bayesian linear regression for which both the posterior and posterior predictive distributions are tractable in closed form. This idea has recently been revisited in the contexts of Bayesian optimization \parencite{snoek2015scalable}, reinforcement learning \parencite{riquelme2018deep} and benchmarked for supervised learning \parencite{ober2019benchmarking} and was found to be surprisingly competitive given its simplicity. It can not only enhance predictive accuracy but also provide improved predictive uncertainty estimates. From a probabilistic perspective, this model disregards the epistemic uncertainty of the weights in the first layers but does quantify the uncertainty for the parameters in the last layer and the homoscedastic noise standard deviation $\sigma$ given the values of the previous layers' weights. Computationally, the closed form updates for the linear regression posterior parameters require the inversion of a matrix. Fortunately, the size of this matrix depends on the number of basis functions, i.e.\ the number of neurons in the penultimate layer, and not on the number of data points. The inversion therefore takes $\mathcal{O}(h^3)$ where $h$ is the size of the last hidden layer and scales well to large datasets. Often we will refer to this model simply as Last Layer Bayesian (LLB) network.
     
 
-\subsection*{Other Approaches}
-Many other ideas have been proposed to obtain uncertainty estimates for the weights of neural networks or directly for the outputs. Among the first ones was the Laplace approximation \parencite{mackay1992practical}. Here the posterior is approximated by a Gaussian distribution centered e.g.\ on a MAP estimate. To get a reasonable approximation for the covariance the local curvature should be taken into account which can be implemented for instance by using the negative inverse of the Hessian. The number of elements in the Hessian is quadratic in the number of weights and inverting it takes cubic time, but \textcite{kristiadi2020being} recently showed how applying the Laplace approximation only on the last layer can be quite beneficial for estimating predictive uncertainty. Another popular method is to use Monte Carlo Dropout \parencite{gal2016dropout}, an approach in which several forward passes through a network with Dropout noise applied are interpreted as samples from an approximate posterior predictive.
-
+\subsection{Other Approaches}
+Many other ideas have been proposed to obtain uncertainty estimates for the weights of neural networks or directly for the outputs. Among the first ones was the Laplace approximation \parencite{mackay1992practical}. Here the posterior is approximated by a Gaussian distribution centered e.g.\ on a MAP estimate. To get a reasonable approximation for the covariance the local curvature should be taken into account which can be implemented for instance by using the negative inverse of the Hessian. 
+%The number of elements in the Hessian is quadratic in the number of weights and inverting it takes cubic time, but \textcite{kristiadi2020being} recently showed that applying the Laplace approximation on the last layer only can already be quite beneficial for estimating predictive uncertainty. 
+Another popular method is to use Monte Carlo dropout \parencite{gal2016dropout}, an approach in which several forward passes through a network with dropout-noise \parencite{srivastava2014dropout} applied are interpreted as samples from an approximate posterior predictive.
 
 \end{document}

@@ -2,41 +2,148 @@
 
 \begin{document}
 
-\chapter{Additional UCI Metrics}
+\chapter{Supplementary UCI Results}
+\label{appendix:uci-results}
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{uci_two-hidden-layers_RMSEs} 
-    \caption{Benchmark of different BNN approximations on the nine UCI datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (blue circles), and LLB networks (orange triangles) and LLB ensembles (orange circles) of different sizes in terms of the average root mean squared error across the 20 (respectively 5 for protein) splits. Shown are mean and standard error. The plot shows the performance of ensembles of size 5, 20, and 50 in increasing order.}
-    \label{fig:uci-benchmark-rsme}
+    \includegraphics[width=\textwidth]{uci_one-hidden-layer_NLLs} 
+    \caption{Benchmark of different BNN approximations (one-hidden-layer architecture) on the nine UCI datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (purple circles), and NL networks (yellow triangles) and NL ensembles (orange circles) of different sizes in terms of the negative average test log-likelihood across the dataset splits. Shown are mean and standard error. The plot shows the performance of ensembles of sizes 5, 20, and 50 in increasing order.}
+    \label{fig:uci-benchmark-ohl-nll}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{uci_one-hidden-layer_RMSEs} 
+    \caption{Benchmark of different BNN approximations (one-hidden-layer architecture) on the nine UCI datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (purple circles), and NL networks (yellow triangles) and NL ensembles (orange circles) of different sizes in terms of the average test root mean squared error (RMSE) across the dataset splits. Shown are mean and standard error. The plot shows the performance of ensembles of sizes 5, 20, and 50 in increasing order.}
+    \label{fig:uci-benchmark-ohl-rmse}
+\end{figure}
+
+We ran the experiments of chapter \ref{chapter:uci-benchmark} additionally with models with only one hidden layer, keeping all other hyperparameters stable. Figure \ref{fig:uci-benchmark-ohl-nll} and \ref{fig:uci-benchmark-ohl-rmse} show negative LL and RMSE performance respectively for VI, and MAP and NL networks and ensembles. The results are qualitatively similar to the two-hidden-layer experiments. In figure \ref{fig:uci-ensemble-sizes-ohl} we additionally visualize the convergence behavior in the number of members for one-hidden-layer networks. The figure shows the behavior for MAP and NL ensembles in terms of LL and RMSE. Also here the results seem qualitatively similar to the two-hidden-layer case. This raises the confidence that the results generalize to other architectures as well.
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        % \includegraphics[width=\linewidth]{uci_ensemble-size-convergence_one-hidden-layer_Ensemble_NLLs} 
+        \setlength{\figwidth}{.99\textwidth}
+        \setlength{\figheight}{.33\textheight}
+        \input{figures/uci_ensemble-size-convergence_one-hidden-layer_Ensemble_NLLs.tex}
+        % \caption{}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        % \includegraphics[width=\linewidth]{uci_ensemble-size-convergence_one-hidden-layer_LLB-Ensemble_NLLs} 
+        \setlength{\figwidth}{.99\textwidth}
+        \setlength{\figheight}{.33\textheight}
+        \input{figures/uci_ensemble-size-convergence_one-hidden-layer_LLB-Ensemble_NLLs.tex}
+        % \caption{}
+    \end{subfigure}
+
+    \begin{subfigure}{0.49\textwidth}
+        % \includegraphics[width=\linewidth]{uci_ensemble-size-convergence_one-hidden-layer_Ensemble_RMSEs} 
+        \setlength{\figwidth}{.99\textwidth}
+        \setlength{\figheight}{.33\textheight}
+        \input{figures/uci_ensemble-size-convergence_one-hidden-layer_Ensemble_RMSEs.tex}
+        % \caption{}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        % \includegraphics[width=\linewidth]{uci_ensemble-size-convergence_one-hidden-layer_LLB-Ensemble_RMSEs} 
+        % \setlength{\figwidth}{.99\textwidth}
+        \setlength{\figwidth}{.99\textwidth}
+        \setlength{\figheight}{.33\textheight}
+        \input{figures/uci_ensemble-size-convergence_one-hidden-layer_LLB-Ensemble_RMSEs.tex}
+        % \setlength{\figheight}{.33\textheight}
+        % \input{figures/uci_ensemble-size-convergence_one-hidden-layer_LLB-Ensemble_RMSEs.tex}
+        % \caption{}
+    \end{subfigure}
+    \caption{Average LL (top row) and RMSE (bottom row) performance curves for each dataset scaled such that single networks' performance lies at 0 and 50-member ensembles' performance lies at 1 (in light colors) for MAP ensembles (left column) and NL ensembles (right column). Average of the dataset curves in black. y-values represent fraction of performance gains of 50-member ensembles over single networks achieved by different ensemble sizes. Black dots mark ensemble sizes 2, 5, 10, 20, and 50 and dashed lines connect to y-axis.}
+    \label{fig:uci-ensemble-sizes-ohl}
 \end{figure}
 
 
-\chapter{Additional UCI Gap Metrics}
+
+
+\chapter{UCI Gap Results}
+\label{appendix:uci-gap}
+We measure model performance under distributional shift in the input space with a benchmark on the recently introduced ``UCI gap'' dataset splits \parencite{foong2019between}\footnote{Thanks to Andrew Foong for providing the indices of the splits.}. These train-test splits use the standard UCI datasets and split them such that the training data comprises the outer edges of each input dimension respectively and the test data lies in the middle. Whether a model generalizes well to these unseen regions depends of course on the true underlying functional mapping and whether it is approximated well by the model. For a linear regression model, the basis functions dictate how the model generalizes from training data to unseen regions. When the basis functions are global (polynomials for instance) the training data strongly influences the prediction of the model on the whole input space. When the basis functions are local on the other hand (radial basis functions for instance), the model cannot generalize far away from the training data and reverts to the prior prediction for these areas. For neural networks, it is less clear how they generalize to unseen regions of the input space. Yet, since they are highly flexible function approximators, the predictive uncertainty should quickly become large when moving away from the training data at least under a fully Bayesian treatment. Whether the approximate methods that we consider replicate this behavior is less clear. For practical applications, generalization behavior that makes good guesses away from the training data is desirable, but if that is not the case, at least the predictive uncertainty should become large such that the predictions for these inputs can be flagged as uncertain.
+
+We repeat the experiments of chapter \ref{chapter:uci-benchmark} (with two-hidden-layer networks) on the gap data splits and visualize the results of the different models in figures \ref{fig:uci-gap-benchmark-nll} and \ref{fig:uci-gap-benchmark-rmse}. Naturally, the performance degrades for all models but VI compares more favorably on the gap splits than in the i.i.d.\ setting. For most datasets, the performance of all models degrades rather gracefully, but on ``energy'' and ``naval'' the MAP and NL networks and ensembles show catastrophic performance. On ``energy'' the RMSE of all models increases by a factor of five to ten and the MAP and NL networks and ensembles seem to be overconfident in their prediction since their log-likelihood is far worse than that of VI while their RMSE is slightly better. On ``naval'' all models' RMSE degrades by at least a factor of ten, and MAP and NL networks and ensembles again show catastrophic overconfidence, while VI seems to do relatively well in terms of negative LL. Nevertheless, ensembling still shows large performance gains over single networks with similarly diminishing returns in the number of members. Adding a Bayesian linear regression to the last layer interestingly seems to be less useful than in the i.i.d.\ case. An improvement of using NL models can mainly be seen on ``yacht'' while for the other datasets the performance is similar or worse compared to MAP models\footnote{Perhaps our choice of prior is not ideal. Before we had decided on a prior, we ran the experiments with a non-informative NIG prior for the NL models, and in that situation, NL models compared more favorably to MAP models.}.
+
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{uci-gap_two-hidden-layers_RMSEs} 
-    \caption{Benchmark of different BNN approximations on the nine UCI-Gap datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (blue circles), and LLB networks (orange triangles) and LLB ensembles (orange circles) of different sizes in terms of the average test negative log likelihood across the 20 (respectively 5 for protein) splits. Shown are mean and standard error. The plot shows the performance of ensembles of size 5, 20, and 50 in increasing order.}
+    \includegraphics[width=\textwidth]{uci-gap_two-hidden-layers_NLLs} 
+    \caption{Benchmark of different BNN approximations on the nine UCI-Gap datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (purple circles), and NL networks (yellow triangles) and NL ensembles (orange circles) of different sizes in terms of the average test negative log-likelihood across the gap dataset splits. Shown are mean and standard error. The plot shows the performance of ensembles of sizes 5, 20, and 50 in increasing order.}
+    \label{fig:uci-gap-benchmark-nll}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{uci-gap_two-hidden-layers_RMSEs} 
+    \caption{Benchmark of different BNN approximations on the nine UCI-Gap datasets. We compare the performance of VI (green squares), MAP networks (blue triangles), MAP ensembles of different sizes (purple circles), and NL networks (yellow triangles) and NL ensembles (orange circles) of different sizes in terms of the average test negative log likelihood across the gap dataset splits. Shown are mean and standard error. The plot shows the performance of ensembles of size 5, 20, and 50 in increasing order.}
     \label{fig:uci-gap-benchmark-rmse}
 \end{figure}
 
+\subsection*{Returns of Using Larger Ensembles}
+We additionally repeat the evaluation of the returns of using larger ensemble sizes for the gap data splits. The results are visualized in figure \ref{fig:uci-gap-ensemble-sizes}. From the figure it is apparent that the functional relationship is similar to the i.i.d.\ case for the log-likelihood but noisier. For RMSE on the other hand, we find that the function of returns follows the i.i.d. case much less clearly. For ``energy'', increasing the ensemble size initially even produces worse RMSE performance. Performance on ``naval'' also follows a quite noisy pattern. The patterns for ``energy' and ``naval' can already be guessed at from figure \ref{fig:uci-gap-benchmark-rmse} where we see that RMSE performance hardly increases for larger ensembles and has a high standard error. Plotting these curves in the style of figure \ref{fig:uci-gap-ensemble-sizes} magnifies slight deviations since the overall performance gain is so low. Overall the fraction of performance of the large ensemble achieved by smaller ones seems roughly similar to the i.i.d.\ case for all datasets but ``energy'' and ``naval''. For these two datasets, the fractions achieved are quite a bit lower.
 
-\chapter{Additional HMC UCI Metrics}
+
 \begin{figure}
     \centering
     \begin{subfigure}{0.49\textwidth}
-        \includegraphics[width=0.98\linewidth]{yacht_01_two-hidden-layers_HMC-Map-Ensemble-RMSE} 
+        % \includegraphics[width=\linewidth]{uci-gap_ensemble-size-convergence_two-hidden-layers_Ensemble_NLLs} 
+        \setlength{\figwidth}{.99\textwidth}
+        \setlength{\figheight}{.33\textheight}
+        \input{figures/uci-gap_ensemble-size-convergence_two-hidden-layers_Ensemble_NLLs.tex}
+        % \caption{}
+        \label{fig:uci-gap-ensemble-sizes-ll-map}
     \end{subfigure}
     \begin{subfigure}{0.49\textwidth}
-        \includegraphics[width=0.98\linewidth]{yacht_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+        % \includegraphics[width=\linewidth]{uci-gap_ensemble-size-convergence_two-hidden-layers_LLB-Ensemble_NLLs} 
+        \setlength{\figwidth}{.99\textwidth}
+        \setlength{\figheight}{.33\textheight}
+        \input{figures/uci-gap_ensemble-size-convergence_two-hidden-layers_LLB-Ensemble_NLLs.tex}
+        % \caption{}
+        \label{fig:uci-gap-ensemble-sizes-ll-llb}
     \end{subfigure}
     \begin{subfigure}{0.49\textwidth}
-        \includegraphics[width=0.98\linewidth]{boston_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+        % \includegraphics[width=\linewidth]{uci-gap_ensemble-size-convergence_two-hidden-layers_Ensemble_RMSEs} 
+        \setlength{\figwidth}{.99\textwidth}
+        \setlength{\figheight}{.33\textheight}
+        \input{figures/uci-gap_ensemble-size-convergence_two-hidden-layers_Ensemble_RMSEs.tex}
+        % \caption{}
+        \label{fig:uci-gap-ensemble-sizes-rmse-map}
     \end{subfigure}
     \begin{subfigure}{0.49\textwidth}
-        \includegraphics[width=0.98\linewidth]{concrete_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+        % \includegraphics[width=\linewidth]{uci-gap_ensemble-size-convergence_two-hidden-layers_LLB-Ensemble_RMSEs} 
+        \setlength{\figwidth}{.99\textwidth}
+        \setlength{\figheight}{.33\textheight}
+        \input{figures/uci-gap_ensemble-size-convergence_two-hidden-layers_LLB-Ensemble_RMSEs.tex}
+        % \caption{}
+        \label{fig:uci-gap-ensemble-sizes-rmse-llb}
     \end{subfigure}
-    \caption{RMSE}
-    \label{fig:hmc_comparisons_two-rmse}
+    \caption{Average LL (top row) and RMSE (bottom row) performance curves for each gap dataset scaled such that single networks' performance lies at 0 and 50-member ensembles' performance lies at 1 (in light colors) for MAP ensembles (left column) and NL ensembles (right column). Average of the dataset curves in black. y-values represent fraction of performance gains of 50-member ensembles over single networks achieved by different ensemble sizes. Black dots mark ensemble sizes 2, 5, 10, 20, and 50 and dashed lines connect to y-axis.}
+    \label{fig:uci-gap-ensemble-sizes}
 \end{figure}
+
+
+
+
+% \chapter{Additional HMC UCI Metrics}
+% \begin{figure}
+%     \centering
+%     \begin{subfigure}{0.49\textwidth}
+%         \includegraphics[width=0.98\linewidth]{yacht_01_two-hidden-layers_HMC-Map-Ensemble-RMSE} 
+%     \end{subfigure}
+%     \begin{subfigure}{0.49\textwidth}
+%         \includegraphics[width=0.98\linewidth]{yacht_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+%     \end{subfigure}
+%     \begin{subfigure}{0.49\textwidth}
+%         \includegraphics[width=0.98\linewidth]{boston_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+%     \end{subfigure}
+%     \begin{subfigure}{0.49\textwidth}
+%         \includegraphics[width=0.98\linewidth]{concrete_01_one-hidden-layer_HMC-Map-Ensemble-RMSE} 
+%     \end{subfigure}
+%     \caption{RMSE}
+%     \label{fig:hmc_comparisons_two-rmse}
+% \end{figure}
 
 \end{document}

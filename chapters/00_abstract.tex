@@ -2,6 +2,11 @@
 
 \begin{document}
 
-This thesis deals with questions concerning the approximation of Bayesian neural networks with ensembling methods.
+Deep neural networks have achieved impressive accuracy on a wide range of tasks over the last decade. Yet they suffer from overconfident predictions, limiting their applicability to tasks where making mistakes is cheap. Using a Bayesian approach to deep learning that represents the uncertainty about the values of the parameters, promises better calibrated predictive uncertainty, but Bayesian neural networks are hard to approximate. Recently the idea of using deep ensembles to better represent predictive uncertainty has gained traction and this thesis aims to improve our understanding of these ensembles as approximate Bayesian neural networks. We propose an enhancement of ensembles of neural networks that incorporates the idea of replacing the last layer's weights with a closed-form Bayesian linear regression and point out its advantages in theory and empirical evaluations. Additionally, we investigate more closely than before how the returns of using larger ensembles unfold as a function of the number of members and find that small ensembles capture great fractions of the gains of larger ensembles.
+Finally, we investigate the relationship of ensembles to the approximate ground truth Bayesian neural network. To obtain it we use Markov chain Monte Carlo, highlight its challenges for the use with neural networks and propose a new convergence diagnostic that focuses on the predictive distribution instead of the weight space. Comparing ensembles' predictive distribution to that of the approximate ground truth, we find that ensembling enhances not only performance but also the approximation to the true predictive distribution. Yet, significant room for improving the approximation remains.
+ 
+
+
+%This thesis deals with questions concerning the approximation of Bayesian neural networks with ensembling methods.
 
 \end{document}
