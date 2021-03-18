@@ -5,7 +5,7 @@
 Combining ensembles and LLB $\rightarrow$ LLB ensembles
 \bigskip
 
-Toy network weight space visualization: Figure \ref{fig:weight-space-approximations} (!! Maybe also show VI approximation? !!)
+Toy network weight space visualization: Figure \ref{fig:weight-space-approximations} 
 \bigskip
 
 LLB ensembles can capture different modes of the posterior (like MAP ensembles) and capture more epistemic uncertainty for the weights of the last layer. However, we have no guarantees to capture the modes in the correct ratio to each other (mixture coefficients might be off). 
@@ -62,7 +62,7 @@ $\rightarrow$ LLB ensembles are a new method to approximate BNNs and make a new 
 \section{Toy Experiments}
 !!Not sure whether to include these results or not.!!
 
-Can we find toy circumstances where ensembles perform badly and can LLB ensembles help in those cases?
+Can we find toy circumstances where ensembles perform badly and can NL ensembles help in those cases?
 
 $\rightarrow$ Yes, ensembles underestimate the predictive uncertainty when the functional diversity in the ensemble is low \parencite{yao2019quality}. In our 1-D toy experiments this happens for example when the outer edges of the training data are approximately linear. In these cases, relu networks (perhaps unsurprisingly) tend to simply linearly extrapolate and so all ensemble members have approximately the same predictive distribution. Using LLB ensembles can remedy the problem in those cases. See figure \ref{fig:linear-outer-edge} !! (have three more toy examples. Include them?) !!
 \begin{figure}

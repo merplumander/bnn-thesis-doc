@@ -41,7 +41,7 @@ $\rightarrow$
     \item Larger ensemble sizes are better but returns are indeed quickly diminishing.
     \item Returns of using larger ensembles seem to follow a similar pattern wether we use MAP or LLB networks.
     \item Relatedly, the difference between MAP and LLB ensembles seems to be relatively stable across different ensemble sizes within each dataset.
-    \item VI performance is pretty bad for some datasets. Likely due to a) using standard VI instead of Reparameterization or Flipout trick. b) VI's strong dependence on initializations of variational posterior and likelihood's noise scale, that we didn't tune.
+    \item VI performance is pretty bad for some datasets. Possibly due to VI's strong dependence on initializations of variational posterior and likelihood's noise scale, that we didn't tune. Nevertheless, our one hidden layer standard VI is better than Miguel’s Probabilistic Backpropagation paper benchmark VI on every single dataset sometimes by a lot. And they used Bayesian optimization to find good hyper parameters (but only trained for 40 epochs). So at least VI’s bad performance is not due to me having it implemented badly. !! doublecheck again if this is true !!
 \end{itemize}
 
 
@@ -92,6 +92,8 @@ $\rightarrow$ Results:
 
 
 \section{UCI Gap Benchmarks}
+!! Possibly move the whole UCI gap thing to the appendix !!
+
 Additionally, we investigate the behaviour on the recently introduced UCI-Gap datasets to test OOD performance \parencite{foong2019between}\footnote{Many thanks to Andrew Foong for providing these data splits.}. 
 \bigskip
 
@@ -134,6 +136,7 @@ $\rightarrow$ Figure \ref{fig:uci-gap-ensemble-sizes}
     \item Returns of using larger ensembles seem to follow a similar pattern as in the IID experiments.
     \item Convergence is slightly slower.
     \item Again, the returns of using larger ensembles follow almost identical patterns four MAP and LLB ensembles.
+    \item !! Perhaps here our evaluation is not quite valid since we first average the performance across splits and then scale these curves between 0 and 1. This makes sense in the IID case since we expect all performances to be roughly equal. But with the gap data, we expect that performances might be strongly different across different splits depending on which input variable was left out !!
 \end{itemize}
 
 
